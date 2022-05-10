@@ -129,6 +129,7 @@ class Element extends HTMLElement {
         if(newValue) {
           this.threadId = parseInt(newValue);
           this.refreshData();
+          this.dispatchEvent(new CustomEvent("changed-thread", {detail: {id: this.threadId, component: this}, bubbles: true, cancelable: false}));
         }
       break;
     }
