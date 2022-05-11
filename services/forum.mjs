@@ -4,6 +4,7 @@ import {paginate} from "../../../tools/pagination.mjs"
 import SearchQueryParser from "searchqueryparser"
 import Entity, { isFilterValid } from "entitystorage"
 import ForumThread from "../models/thread.mjs"
+import Forum from "../models/forum.mjs"
 
 export let tokens = [
   {keywords: ["id"], title: "Search for Id", resolve: token => `prop:id=${token}`},
@@ -20,7 +21,7 @@ class Service {
     this.parser.init()
   }
 
-  search(query, paginationArgs = {}) {
+  search(query, paginationArgs = {}, forumId = null) {
     if(!isFilterValid(query)) return { nodes: [], pageInfo: { totalCount: 0 } };
     let qGen = {
       parseE: function (e) {
@@ -46,8 +47,19 @@ class Service {
     }
 
     try {
-      let allResults = q ? ForumThread.search(`tag:forumthread (${q})`) : ForumThread.all() 
+      let allResults;
+
       //first, last, start, end, after, before
+
+      if(forumId){
+        let forum = Forum.lookup(forumId)
+        if(forum)
+          allResults = q ? ForumThread.search(`tag:forumthread thread..id:${forum._id} (${q})`) : forum.threads 
+        else
+          allResults = []
+      } else {
+        allResults = q ? ForumThread.search(`tag:forumthread (${q})`) : ForumThread.all() 
+      }
       let res;
 
       if (paginationArgs.reverse === true)

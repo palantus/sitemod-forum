@@ -12,6 +12,7 @@ import {
     GraphQLBoolean
   } from 'graphql'
 import ForumThread from "../../models/thread.mjs"
+import Forum from "../../models/forum.mjs"
 import {ifPermissionThrow} from "../../../../services/auth.mjs"
 
 export const ForumAuthorType = new GraphQLObjectType({
@@ -50,6 +51,17 @@ export const ForumThreadType = new GraphQLObjectType({
   fields: () => forumThreadFields
 })
 
+export const ForumType = new GraphQLObjectType({
+  name: 'Forum',
+  description: 'This represents a forum post',
+  fields: () => ({
+    id: { type: GraphQLNonNull(GraphQLString)},
+    name: { type: GraphQLNonNull(GraphQLString) },
+    language: { type: GraphQLNonNull(GraphQLString) },
+    threadCount: { type: GraphQLNonNull(GraphQLInt), resolve: f => f.rels.thread?.length||0 }
+  })
+})
+
 export const ForumThreadResultType = new GraphQLObjectType({
   name: 'ForumThreadResultType',
   fields: {
@@ -71,10 +83,16 @@ export default {
       fields.forumThreads = {
           type: ForumThreadResultType,
           args: {
-              input: { type: PageableSearchArgsType }
+              input: { type: PageableSearchArgsType },
+              forum: { type: GraphQLString}
           },
           description: "Search for forum threads",
-          resolve: (parent, args, context) => ifPermissionThrow(context, "forum.read", forumService.search(args.input.query, args.input))
+          resolve: (parent, args, context) => ifPermissionThrow(context, "forum.read", forumService.search(args.input?.query, args.input, args.forum))
+      }
+      fields.forums = {
+          type: GraphQLList(ForumType),
+          description: "List forums",
+          resolve: (parent, args, context) => ifPermissionThrow(context, "forum.read", Forum.all())
       }
   }
 }

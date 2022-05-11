@@ -16,41 +16,35 @@ template.innerHTML = `
   <link rel='stylesheet' href='/css/searchresults.css'>
   <style>
     #container{
-        /*padding: 10px;*/
-        /*padding-top: 55px;*/
         position: relative;
     }
     table{
       width: 100%;
       margin-top: 10px;
-      /*box-shadow: 0px 0px 10px gray;*/
-      /*border: 1px solid gray;*/
     }
     table thead tr{
       border-top: 1px solid gray;
       border-bottom: 1px solid gray;
-    }
-    table-paging{
-      position: absolute;
-      right: 10px;
-      top: -3px;
     }
     
     table thead th:nth-child(1){width: 30px}
     table thead th:nth-child(2){width: 50px}
     table thead th:nth-child(3){width: 140px}
     table thead th:nth-child(4){width: 200px}
-    table thead th:nth-child(5){width: 500px}
     
-    #resultinfo{margin-left: 5px;}
+    #resultinfo{
+      margin-left: 0px; 
+      position: relative;
+      top: 2px;
+    }
   </style>  
 
   <div id="container">
     <action-bar>
-        <action-bar-item id="log-btn">Log</action-bar-item>
+        <action-bar-item id="new-btn">New thread</action-bar-item>
     </action-bar>
     
-    <input id="search" type="text" placeholder="Enter query" value=""></input>
+    <input id="search" type="text" placeholder="Search current forum" value=""></input>
     <searchhelp-component path="search/tokens/forum"></searchhelp-component>
     <span id="resultinfo"></span>
 
@@ -62,7 +56,6 @@ template.innerHTML = `
               <th>Date</th>
               <th>Author</th>
               <th>Title</th>
-              <th>Issues</th>
             </tr>
         </thead>
         <tbody>
@@ -78,13 +71,18 @@ class Element extends HTMLElement {
     this.attachShadow({ mode: 'open' });
     this.shadowRoot.appendChild(template.content.cloneNode(true));
     
-    this.onScroll = this.onScroll.bind(this); //Make sure "this" in that method refers to this
+    this.onScroll = this.onScroll.bind(this);
+    this.newClicked = this.newClicked.bind(this);
     
     this.shadowRoot.querySelector('input').addEventListener("change", () => {
       this.queryChanged()
       pushStateQuery(this.lastQuery ? {filter: this.lastQuery} : undefined)
     })
-    this.shadowRoot.querySelector("#log-btn").addEventListener("click", () => goto("/forum/log"))
+    this.shadowRoot.getElementById("new-btn").addEventListener("click", this.newClicked)
+
+    this.forumId = /^\/forum\/([a-z0-9\-]+)/.exec(state().path)?.[1] || null
+
+    this.shadowRoot.getElementById("search").setAttribute("placeholder", this.forumId ? "Search current forum" : "Search all forums")
 
     this.query = ""
     this.results = []
@@ -106,21 +104,19 @@ class Element extends HTMLElement {
   }
 
   async fillResults(start, end){
-    let data = {issues: {nodes: [], pageInfo: {totalCount: 0}}}
-    data = await api.query(`query ForumList($input:PageableSearchArgsType){
-        forumThreads(input: $input){
+    let data = await api.query(`query ForumList($input:PageableSearchArgsType, $forum:String){
+        forumThreads(input: $input, forum: $forum){
           nodes{
             id,
             author{name},
             title,
-            date,
-            issues{id}
+            date
           },
           pageInfo{
             totalCount
           }
         }
-    }`, {input: {query: this.lastQuery.toLowerCase(), start, end, reverse: true}})
+    }`, {input: {query: this.lastQuery.toLowerCase(), start, end, reverse: true}, forum: this.forumId})
     for(let i = 0; i < data.forumThreads.nodes.length; i++)
       this.results[i+start] = data.forumThreads.nodes[i]
     this.resultCount = data.forumThreads.pageInfo.totalCount
@@ -144,7 +140,6 @@ class Element extends HTMLElement {
                 <td>${thread.date.replaceAll("T", " ")}</td>
                 <td>${thread.author.name}</td>
                 <td>${thread.title}</td>
-                <td>${thread.issues?.map(i => `<field-ref ref="/issue/${i.id}">${i.id}</field-ref>`).join(" ")||""}</td>
             </tr>
         `
         tab.appendChild(row);
@@ -153,16 +148,12 @@ class Element extends HTMLElement {
     // Selectable rows
     this.selectionTool = makeRowsSelectable(tab.parentElement)
 
-    /*
-    // Paging
-    this.shadowRoot.querySelector("table-paging").total = data.issues.pageInfo.totalCount
-    if(start == 0) //happens on first load and on filter change
-      this.shadowRoot.querySelector("table-paging").page = 1
-    this.shadowRoot.querySelector("table-paging").addEventListener("page-change", this.pagerPageChange)
-    */
-
     // Result info
     this.shadowRoot.getElementById("resultinfo").innerText = `${this.resultCount} results`
+  }
+
+  newClicked(){
+
   }
 
   connectedCallback() {
