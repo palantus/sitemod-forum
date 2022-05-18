@@ -2,7 +2,7 @@
 
 import {paginate} from "../../../tools/pagination.mjs"
 import SearchQueryParser from "searchqueryparser"
-import Entity, { isFilterValid } from "entitystorage"
+import { isFilterValid } from "entitystorage"
 import ForumThread from "../models/thread.mjs"
 import Forum from "../models/forum.mjs"
 
