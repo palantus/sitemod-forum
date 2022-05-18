@@ -11,6 +11,7 @@ import {
     GraphQLInputObjectType,
     GraphQLBoolean
   } from 'graphql'
+import {UserType} from "../../../../api/graphql/user.mjs"
 import ForumThread from "../../models/thread.mjs"
 import Forum from "../../models/forum.mjs"
 import {ifPermissionThrow} from "../../../../services/auth.mjs"
@@ -19,7 +20,8 @@ export const ForumAuthorType = new GraphQLObjectType({
   name: 'ForumAuthorType',
   description: 'This represents a forum author',
   fields: () => ({
-    name: { type: GraphQLNonNull(GraphQLString) }
+    name: { type: GraphQLNonNull(GraphQLString) },
+    user: { type: UserType }
   })
 })
 
@@ -29,18 +31,18 @@ export const ForumPostType = new GraphQLObjectType({
   fields: () => ({
     id: { type: GraphQLNonNull(GraphQLInt) },
     body: { type: GraphQLNonNull(GraphQLString) },
-    subject: { type: GraphQLNonNull(GraphQLString) },
+    bodyHTML: { type: GraphQLString },
     date: { type: GraphQLNonNull(GraphQLString) },
-    author: { type: GraphQLNonNull(ForumAuthorType), resolve: p => ({name: p.author})  }
+    author: { type: GraphQLNonNull(ForumAuthorType) }
   })
 })
 
 export let forumThreadFields = {
   id: { type: GraphQLNonNull(GraphQLInt) },
   date: { type: GraphQLNonNull(GraphQLString) },
-  author: { type: GraphQLNonNull(ForumAuthorType), resolve: t => ({name: t.author}) },
+  author: { type: GraphQLNonNull(ForumAuthorType)},
   title: { type: GraphQLNonNull(GraphQLString) },
-  url: { type: GraphQLNonNull(GraphQLString) },
+  url: { type: GraphQLString },
   postCount: {type: GraphQLInt, resolve: t => t.relsrev?.thread?.length || 0},
   posts: {type: GraphQLList(ForumPostType), resolve: t => t.posts},
 }

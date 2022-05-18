@@ -5,6 +5,7 @@ import "/components/field-ref.mjs"
 import {pushStateQuery, state, goto} from "/system/core.mjs"
 import {on, off, fire} from "/system/events.mjs"
 import {makeRowsSelectable} from "/libs/table-tools.mjs"
+import { alertDialog, showDialog } from "/components/dialog.mjs"
 import "/components/field.mjs"
 import "/components/action-bar.mjs"
 import "/components/action-bar-item.mjs"
@@ -37,13 +38,14 @@ template.innerHTML = `
       position: relative;
       top: 2px;
     }
+    .hidden{display: none;}
   </style>  
 
+  <action-bar>
+    <action-bar-item id="new-btn">New thread</action-bar-item>
+  </action-bar>
+
   <div id="container">
-    <action-bar>
-        <action-bar-item id="new-btn">New thread</action-bar-item>
-    </action-bar>
-    
     <input id="search" type="text" placeholder="Search current forum" value=""></input>
     <searchhelp-component path="search/tokens/forum"></searchhelp-component>
     <span id="resultinfo"></span>
@@ -62,6 +64,10 @@ template.innerHTML = `
         </tbody>
     </table>
   </div>
+
+  <dialog-component title="New thread" id="new-dialog">
+    <field-component label="Title"><input id="new-title"></input></field-component>
+  </dialog-component>
 `;
 
 class Element extends HTMLElement {
@@ -73,6 +79,7 @@ class Element extends HTMLElement {
     
     this.onScroll = this.onScroll.bind(this);
     this.newClicked = this.newClicked.bind(this);
+    this.clearAndRefreshResults = this.clearAndRefreshResults.bind(this)
     
     this.shadowRoot.querySelector('input').addEventListener("change", () => {
       this.queryChanged()
@@ -83,6 +90,10 @@ class Element extends HTMLElement {
     this.forumId = /^\/forum\/([a-z0-9\-]+)/.exec(state().path)?.[1] || null
 
     this.shadowRoot.getElementById("search").setAttribute("placeholder", this.forumId ? "Search current forum" : "Search all forums")
+    this.shadowRoot.getElementById("new-btn").classList.toggle("hidden", !this.forumId)
+
+    //Hide actionbar if there aren't any buttons visible
+    this.shadowRoot.querySelector("action-bar").classList.toggle("hidden", !!!this.shadowRoot.querySelector("action-bar action-bar-item:not(.hidden)"))
 
     this.query = ""
     this.results = []
@@ -98,6 +109,12 @@ class Element extends HTMLElement {
     this.shadowRoot.querySelector('input').value = q;
     //this.shadowRoot.querySelector("table-paging").page = 1
 
+    this.clearResults()
+    await this.fillResults(0, 80)
+    this.appendResults(0, 80)
+  }
+
+  async clearAndRefreshResults(){
     this.clearResults()
     await this.fillResults(0, 80)
     this.appendResults(0, 80)
@@ -137,9 +154,9 @@ class Element extends HTMLElement {
         row.innerHTML = `
             <tr>
                 <td><field-ref ref="/forum/thread/${thread.id}"/>${thread.id}</field-ref></td>
-                <td>${thread.date.replaceAll("T", " ")}</td>
+                <td>${thread.date.replaceAll("T", " ").substring(0, 19)}</td>
                 <td>${thread.author.name}</td>
-                <td>${thread.title}</td>
+                <td><field-ref ref="/forum/thread/${thread.id}"/>${thread.title}</field-ref></td>
             </tr>
         `
         tab.appendChild(row);
@@ -153,19 +170,32 @@ class Element extends HTMLElement {
   }
 
   newClicked(){
+    if(!this.forumId) return alertDialog("Only possible in a specific forum")
+    let dialog = this.shadowRoot.querySelector("#new-dialog")
 
+    showDialog(dialog, {
+      show: () => this.shadowRoot.querySelector("#new-title").focus(),
+      ok: async (val) => {
+        let newThread = await api.post(`forum/${this.forumId}`, val)
+        goto(`/forum/thread/${newThread.id}`)
+      },
+      validate: (val) => 
+          !val.title ? "Please fill out title"
+        : true,
+      values: () => {return {
+        title: this.shadowRoot.getElementById("new-title").value
+      }},
+      close: () => {
+        this.shadowRoot.querySelectorAll("field-component input").forEach(e => e.value = '')
+      }
+    })
   }
 
   connectedCallback() {
     this.shadowRoot.querySelector('input').focus();
     this.queryChanged(state().query.filter||"");
     on("changed-page-query", elementName, (query) => this.queryChanged(query.filter || ""))
-    on("changed-project", elementName, async ({query}) => {
-      //this.doSearch(this.lastQuery)
-      this.clearResults()
-      await this.fillResults(0, 80)
-      this.appendResults(0, 80)
-    })
+    on("changed-page", elementName, this.clearAndRefreshResults)
     this.parentNode.addEventListener("scroll",this.onScroll,false);
     this.parentNodeSaved = this.parentNode;
   }
@@ -173,7 +203,7 @@ class Element extends HTMLElement {
   disconnectedCallback() {
     //this.shadowRoot.querySelector('#toggle-info').removeEventListener();
     off("changed-page-query", elementName)
-    off("changed-project", elementName)
+    off("changed-page", elementName)
     this.parentNodeSaved.removeEventListener("scroll",this.onScroll,false);
   }
 

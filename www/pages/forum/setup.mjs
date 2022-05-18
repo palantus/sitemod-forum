@@ -4,6 +4,9 @@ import api from "/system/api.mjs"
 import "/components/field-edit.mjs"
 import "/components/field-list.mjs"
 import {on, off} from "/system/events.mjs"
+import {goto} from "/system/core.mjs"
+import "/components/action-bar.mjs"
+import "/components/action-bar-item.mjs"
 
 const template = document.createElement('template');
 template.innerHTML = `
@@ -24,6 +27,10 @@ template.innerHTML = `
     }
   </style>  
 
+  <action-bar>
+    <action-bar-item id="map-users-btn">Map users</action-bar-item>
+  </action-bar>
+
   <div id="container">
 
     <h1>Forum setup</h1>
@@ -41,6 +48,8 @@ class Element extends HTMLElement {
 
     this.refreshData = this.refreshData.bind(this); //Make sure "this" in that method refers to this
     
+    this.shadowRoot.getElementById("map-users-btn").addEventListener("click", () => goto("/forum/missing-users"))
+
     this.refreshData();
   }
 
