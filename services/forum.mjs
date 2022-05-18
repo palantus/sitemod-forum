@@ -10,8 +10,9 @@ export let tokens = [
   {keywords: ["id"], title: "Search for Id", resolve: token => `prop:id=${token}`},
   {keywords: ["active"], title: "Search for active threads only", resolve: token => `!tag:closed`},
   {keywords: ["language", "lang", "l"], title: "Threads in specific language forums (eg. 'dk')", resolve: token => `forum.prop:"language=${token}"`},
-  {keywords: ["author"], title: "Specific author", resolve: token => `prop:"author~${token}"`},
-  {keywords: [null], title: "Text search", resolve: token => `(prop:title~${token}|prop:author~${token}|thread..prop:body~${token}|prop:id=${token})`}
+  {keywords: ["author", "by"], title: "Specific author", resolve: token => `(prop:"authorName~${token}"|owner.prop:"name~${token}")`},
+  {keywords: ["with"], title: "Participant of thread", resolve: token => `(post.prop:"authorName~${token}"|post.owner.prop:"name~${token}")`},
+  {keywords: [null], title: "Text search", resolve: token => `(prop:"title~${token}"|prop:"authorName~${token}"|post.prop:"body~${token}"|prop:"id=${token}"|post.owner.prop:"name~${token}")`}
 ]
 
 class Service {

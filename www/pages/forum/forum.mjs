@@ -195,7 +195,7 @@ class Element extends HTMLElement {
     this.shadowRoot.querySelector('input').focus();
     this.queryChanged(state().query.filter||"");
     on("changed-page-query", elementName, (query) => this.queryChanged(query.filter || ""))
-    on("changed-page", elementName, this.clearAndRefreshResults)
+    on("returned-to-page", elementName, this.clearAndRefreshResults)
     this.parentNode.addEventListener("scroll",this.onScroll,false);
     this.parentNodeSaved = this.parentNode;
   }
@@ -203,7 +203,7 @@ class Element extends HTMLElement {
   disconnectedCallback() {
     //this.shadowRoot.querySelector('#toggle-info').removeEventListener();
     off("changed-page-query", elementName)
-    off("changed-page", elementName)
+    off("returned-to-page", elementName)
     this.parentNodeSaved.removeEventListener("scroll",this.onScroll,false);
   }
 
