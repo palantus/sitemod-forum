@@ -65,6 +65,7 @@ template.innerHTML = `
     .postbody.rendered table th, #rendered table td{padding-right: 5px;}
     .postbody.rendered table td{border-left: 1px solid gray; padding: 5px;}
     .postbody.rendered table tbody tr{vertical-align: top; border-bottom: 1px solid gray; border-right: 1px solid gray;}
+    .postbody.rendered>p{margin: 0px;}
   </style>  
 
   <action-bar class="hidden">
