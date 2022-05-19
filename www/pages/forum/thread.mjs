@@ -77,7 +77,7 @@ template.innerHTML = `
     <div id="posts"></div>
     <br>
     <button id="reply" class="styled">Post a new reply</button>
-    <richtext-component id="reply-editor" class="hidden"/>
+    <richtext-component id="reply-editor" class="hidden" nosave submit></richtext-component>
   </div>
 `;
 
@@ -95,8 +95,8 @@ class Element extends HTMLElement {
     this.deleteClicked = this.deleteClicked.bind(this)
 
     this.shadowRoot.getElementById("reply").addEventListener("click", this.replyClicked)
-    this.shadowRoot.getElementById("reply-editor").addEventListener("save", ({detail: {text}}) => this.postReply(text))
     this.shadowRoot.getElementById("reply-editor").addEventListener("close", () => this.toggleReplyEditor(false))
+    this.shadowRoot.getElementById("reply-editor").addEventListener("submit", ({detail: {text}}) => this.postReply(text))
     this.shadowRoot.getElementById("delete").addEventListener("click", this.deleteClicked)
 
     this.threadId = this.getAttribute("threadid") || parseInt(/\d+/.exec(state().path)?.[0]);
@@ -173,7 +173,9 @@ class Element extends HTMLElement {
   postReply(body){
     if(!this.threadId) return;
     this.toggleReplyEditor(false)
-    api.post(`forum/thread/${this.threadId}/posts`, {body}).then(this.refreshData)
+    if(body){
+      api.post(`forum/thread/${this.threadId}/posts`, {body}).then(this.refreshData)
+    }
   }
 
   toggleReplyEditor(visible){
