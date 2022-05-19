@@ -158,7 +158,7 @@ class Element extends HTMLElement {
     `
 
     getUser().then(user => {
-      this.shadowRoot.getElementById("delete").classList.toggle("hidden", user.id != thread.author.user?.id && !user.permissions.includes("forum.admin"))
+      this.shadowRoot.getElementById("delete").classList.toggle("hidden", (user.id != thread.author.user?.id && !user.permissions.includes("forum.admin")) || !user.permissions.includes("forum.thread.delete"))
 
       //Hide actionbar if there aren't any buttons visible
       this.shadowRoot.querySelector("action-bar").classList.toggle("hidden", !!!this.shadowRoot.querySelector("action-bar action-bar-item:not(.hidden)"))
