@@ -34,7 +34,7 @@ export default (app) => {
     if(!req.body.title || typeof req.body.title !== "string") throw "Invalid title"
     let thread = new ForumThread()
     thread.title = req.body.title
-    thread.author = res.locals.user.name
+    thread.authorName = res.locals.user.name
     thread.rel(res.locals.user, "owner")
     forum.rel(thread, "thread")
     res.json(thread.toObj())
@@ -47,7 +47,7 @@ export default (app) => {
     if(!req.body.body || typeof req.body.body !== "string") throw "Invalid body"
     let post = new ForumPost()
     post.body = req.body.body
-    post.author = res.locals.user.name
+    post.authorName = res.locals.user.name
     post.rel(res.locals.user, "owner")
     post.updateHTML()
     thread.rel(post, "post")
