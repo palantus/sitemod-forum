@@ -94,7 +94,7 @@ template.innerHTML = `
     <div id="threadinfo"></div>
     <div id="posts"></div>
     <br>
-    <button id="reply" class="styled">Post a new reply</button>
+    <button id="reply" class="styled">Post new reply</button>
     <div id="reply-editor-container"></div>
   </div>
 `;
