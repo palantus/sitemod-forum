@@ -1,4 +1,4 @@
-import Entity, {nextNum} from "entitystorage"
+import Entity, {nextNum, query} from "entitystorage"
 import { getTimestamp } from "../../../tools/date.mjs"
 import {md2html} from "../../../tools/markdown.mjs"
 import User from "../../../models/user.mjs"
@@ -9,6 +9,11 @@ export default class ForumPost extends Entity {
     this.id = nextNum("forumpost")
     this.date = getTimestamp()
     this.tag("forumpost")
+  }
+
+  static lookup(id){
+    if(!id) return null
+    return query.type(ForumPost).tag("forumpost").prop("id", id).first
   }
 
   updateHTML(){

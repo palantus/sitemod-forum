@@ -55,8 +55,18 @@ export default (app) => {
   route.delete("/thread/:id", noGuest, (req, res) => {
     let thread = ForumThread.lookup(req.params.id)
     if(!thread) throw "Unknown thread"
-    if(thread.related.owner?._id != res.locals.user._id && !validateAccess(req, res, {permission: "forum.admin"})) throw "You do not have access to do this";
+    if(thread.related.owner?._id == res.locals.user._id && !validateAccess(req, res, {permission: "forum.thread.delete"})) return;
+    if(thread.related.owner?._id != res.locals.user._id && !validateAccess(req, res, {permission: "forum.admin"})) return;
     thread.delete();
+    res.json({success: true})
+  })
+
+  route.delete("/post/:id", noGuest, (req, res) => {
+    let post = ForumPost.lookup(req.params.id)
+    if(!post) throw "Unknown post"
+    if(post.related.owner?._id == res.locals.user._id && !validateAccess(req, res, {permission: "forum.post.delete"})) return;
+    if(post.related.owner?._id != res.locals.user._id && !validateAccess(req, res, {permission: "forum.admin"})) return;
+    post.delete();
     res.json({success: true})
   })
 

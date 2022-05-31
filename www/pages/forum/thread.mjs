@@ -6,6 +6,7 @@ import {state} from "/system/core.mjs"
 import {getUser} from "/system/user.mjs"
 import "/components/action-bar.mjs"
 import "/components/action-bar-item.mjs"
+import "/components/dropdown-menu.mjs"
 import { confirmDialog, alertDialog } from "../../components/dialog.mjs"
 
 const template = document.createElement('template');
@@ -32,14 +33,23 @@ template.innerHTML = `
     div.postauthor {
       display: inline-block;
       margin-right: 10px;
+      top: 2px;
     }
 
     div.postdate {
       display: inline-block;
       position: absolute;
-      right: 10px;
+      right: 20px;
       font-size: 80%;
       color: gray;
+    }
+
+    .postoptions{
+      display: inline-block;
+      position: absolute;
+      right: 5px;
+      top: 2px;
+      user-select: none;
     }
 
     div.posttitle {
@@ -93,9 +103,11 @@ class Element extends HTMLElement {
     this.toggleReplyEditor = this.toggleReplyEditor.bind(this)
     this.refreshData = this.refreshData.bind(this)
     this.deleteClicked = this.deleteClicked.bind(this)
+    this.postsClicked = this.postsClicked.bind(this)
 
     this.shadowRoot.getElementById("reply").addEventListener("click", this.replyClicked)
     this.shadowRoot.getElementById("delete").addEventListener("click", this.deleteClicked)
+    this.shadowRoot.getElementById("posts").addEventListener("click", this.postsClicked)
 
     this.threadId = this.getAttribute("threadid") || parseInt(/\d+/.exec(state().path)?.[0]);
     
@@ -123,7 +135,7 @@ class Element extends HTMLElement {
     let {forumThread: thread} = await api.query(`{
       forumThread(id: ${threadId}){
         id, title, author{name, user{id}}, date
-        posts{author{name, user{id}}, date, body, bodyHTML},
+        posts{id, author{name, user{id}}, date, body, bodyHTML},
       }
     }`)
 
@@ -132,12 +144,23 @@ class Element extends HTMLElement {
       return;
     }
 
+    let user = await getUser()
+
     this.thread = thread;
     this.shadowRoot.getElementById("posts").innerHTML = thread.posts.sort((a, b) => a.date < b.date ? -1 : 1)
                                                                     .map(p => `
-                  <div class="post">
+                  <div class="post" data-postId="${p.id}">
                     <div class="postauthor">${p.author.user?.id ? `<field-ref ref="/setup/users/${p.author.user.id}">${p.author.name}</field-ref>` : p.author.name}</div>
                     <div class="postdate">${p.date.replaceAll("T", " ").substring(0, 19)}</div>
+                    <dropdown-menu-component class="postoptions" title="Options" width="300px">
+                      <span slot="label" style="font-size: 80%">&vellip;</span>
+                      <div slot="content">
+                        <h2>Options</h2>
+                        <p>You have the following options available:</p>
+                        <button class="delete" class="${(user.id == p.author.user?.id || user.permissions.includes("forum.admin")) && user.permissions.includes("forum.post.delete") ? "" : "hidden"}">Delete post</button>
+                        <button class="edit" class="${(user.id == p.author.user?.id || user.permissions.includes("forum.admin")) && user.permissions.includes("forum.post.edit") ? "" : "hidden"}">Edit post</button>
+                      </div>
+                    </dropdown-menu-component>
                     <div class="postbody${p.bodyHTML?" rendered":""}">${p.bodyHTML ? p.bodyHTML : p.body.trim().replace(/(\r\n|\n|\r)/gm, "<br/>")}</div>
                   </div>`).join("")
 
@@ -151,15 +174,14 @@ class Element extends HTMLElement {
         <tr><td>Id:</td><td id="threadid"><field-ref ref="/forum/thread/${thread.id}"/>${thread.id}</field-ref></td></tr>
         <tr><td>Author:</td><td id="threadauthor">${thread.author.user?.id ? `<field-ref ref="/setup/users/${thread.author.user.id}">${thread.author.name}</field-ref>` : thread.author.name}</td></tr>
         <tr><td>Date:</td><td id="threaddate">${thread.date.replaceAll("T", " ")}</td></tr>
+        
       </table>
     `
 
-    getUser().then(user => {
-      this.shadowRoot.getElementById("delete").classList.toggle("hidden", (user.id != thread.author.user?.id && !user.permissions.includes("forum.admin")) || !user.permissions.includes("forum.thread.delete"))
+    this.shadowRoot.getElementById("delete").classList.toggle("hidden", (user.id != thread.author.user?.id && !user.permissions.includes("forum.admin")) || !user.permissions.includes("forum.thread.delete"))
 
-      //Hide actionbar if there aren't any buttons visible
-      this.shadowRoot.querySelector("action-bar").classList.toggle("hidden", !!!this.shadowRoot.querySelector("action-bar action-bar-item:not(.hidden)"))
-    })
+    //Hide actionbar if there aren't any buttons visible
+    this.shadowRoot.querySelector("action-bar").classList.toggle("hidden", !!!this.shadowRoot.querySelector("action-bar action-bar-item:not(.hidden)"))
   }
 
   replyClicked(){
@@ -202,6 +224,19 @@ class Element extends HTMLElement {
     window.history.back();
   }
   
+  async postsClicked(e){
+    if(e.target.tagName != "BUTTON") return;
+    let id = e.target.closest(".post")?.getAttribute("data-postId")
+    if(!id) return;
+    if(e.target.classList.contains("delete")){
+      if(!(await confirmDialog(`Are you sure that you want to delete this post?`))) return;
+      await api.del(`forum/post/${id}`)
+      this.refreshData()
+    } else if(e.target.classList.contains("edit")){
+      alertDialog("Not implemented")
+    }
+  }
+
   static get observedAttributes() {
     return ["threadid"];
   }  
