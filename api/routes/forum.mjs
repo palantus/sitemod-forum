@@ -7,6 +7,7 @@ import ForumThread from "../../models/thread.mjs";
 import Forum from "../../models/forum.mjs";
 import ForumPost from "../../models/post.mjs";
 import User from "../../../../models/user.mjs";
+import { getTimestamp } from "../../../../tools/date.mjs";
 
 export default (app) => {
 
@@ -67,6 +68,20 @@ export default (app) => {
     if(post.related.owner?._id == res.locals.user._id && !validateAccess(req, res, {permission: "forum.post.delete"})) return;
     if(post.related.owner?._id != res.locals.user._id && !validateAccess(req, res, {permission: "forum.admin"})) return;
     post.delete();
+    res.json({success: true})
+  })
+
+  route.patch("/post/:id", noGuest, (req, res) => {
+    if(!req.body.body || typeof req.body.body !== "string") throw "Invalid body"
+    let post = ForumPost.lookup(req.params.id)
+    if(!post) throw "Unknown post"
+    if(post.related.owner?._id == res.locals.user._id && !validateAccess(req, res, {permission: "forum.post.edit"})) return;
+    if(post.related.owner?._id != res.locals.user._id && !validateAccess(req, res, {permission: "forum.admin"})) return;
+    if(post.body != req.body.body){
+      post.body = req.body.body
+      post.edited = getTimestamp()
+      post.updateHTML()
+    }
     res.json({success: true})
   })
 

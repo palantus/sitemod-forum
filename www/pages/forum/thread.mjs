@@ -135,7 +135,7 @@ class Element extends HTMLElement {
     let {forumThread: thread} = await api.query(`{
       forumThread(id: ${threadId}){
         id, title, author{name, user{id}}, date
-        posts{id, author{name, user{id}}, date, body, bodyHTML},
+        posts{id, author{name, user{id}}, date, edited, body, bodyHTML},
       }
     }`)
 
@@ -151,7 +151,9 @@ class Element extends HTMLElement {
                                                                     .map(p => `
                   <div class="post" data-postId="${p.id}">
                     <div class="postauthor">${p.author.user?.id ? `<field-ref ref="/setup/users/${p.author.user.id}">${p.author.name}</field-ref>` : p.author.name}</div>
-                    <div class="postdate">${p.date.replaceAll("T", " ").substring(0, 19)}</div>
+                    <div class="postdate" title="Originally posted: ${p.date.replaceAll("T", " ").substring(0, 19)}\nEdited: ${p.edited? p.edited.replaceAll("T", " ").substring(0, 19) : "<never>"}">
+                      ${p.edited ? "(edited) " + p.edited.replaceAll("T", " ").substring(0, 19) : p.date.replaceAll("T", " ").substring(0, 19)}
+                    </div>
                     <dropdown-menu-component class="postoptions" title="Options" width="300px">
                       <span slot="label" style="font-size: 80%">&vellip;</span>
                       <div slot="content">
@@ -226,14 +228,34 @@ class Element extends HTMLElement {
   
   async postsClicked(e){
     if(e.target.tagName != "BUTTON") return;
-    let id = e.target.closest(".post")?.getAttribute("data-postId")
+    let post = e.target.closest(".post")
+    let id = post?.getAttribute("data-postId")
     if(!id) return;
     if(e.target.classList.contains("delete")){
       if(!(await confirmDialog(`Are you sure that you want to delete this post?`))) return;
       await api.del(`forum/post/${id}`)
       this.refreshData()
     } else if(e.target.classList.contains("edit")){
-      alertDialog("Not implemented")
+      // Don't load the editor, unless it is needed
+      import("/components/richtext.mjs").then(() => {
+        let container = this.shadowRoot.getElementById("posts")
+        container.querySelectorAll(".post-edit").forEach(e => e.remove())
+        let div = document.createElement("div")
+        div.classList.add("post-edit")
+        div.innerHTML = `<richtext-component id="post-edit"></richtext-component>`
+        let editor = div.firstChild
+        editor.addEventListener("close", () => container.querySelectorAll(".post-edit").forEach(e => e.remove()))
+        editor.addEventListener("save", async ({detail: {text}}) => {
+          await api.patch(`forum/post/${id}`, {body: text})
+          this.refreshData()
+        })
+        editor.value(this.thread.posts.find(p => p.id == id).body)
+        let nextPostE = post.nextElementSibling
+        if(nextPostE)
+          container.insertBefore(div, nextPostE)
+        else
+          container.appendChild(div)
+      })
     }
   }
 

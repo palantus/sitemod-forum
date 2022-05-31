@@ -40,6 +40,7 @@ export default class ForumPost extends Entity {
       body: this.body || "",
       bodyHTML: this.bodyHTML || null,
       date: this.date,
+      edited: this.edited || null,
       author: {
         name: author.name,
         userId: author.user?.id || null

@@ -33,6 +33,7 @@ export const ForumPostType = new GraphQLObjectType({
     body: { type: GraphQLNonNull(GraphQLString) },
     bodyHTML: { type: GraphQLString },
     date: { type: GraphQLNonNull(GraphQLString) },
+    edited: { type: GraphQLString},
     author: { type: GraphQLNonNull(ForumAuthorType) }
   })
 })
