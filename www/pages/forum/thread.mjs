@@ -4,7 +4,6 @@ import api from "/system/api.mjs"
 import {on, off, fire} from "/system/events.mjs"
 import {state} from "/system/core.mjs"
 import {getUser} from "/system/user.mjs"
-import "/components/richtext.mjs"
 import "/components/action-bar.mjs"
 import "/components/action-bar-item.mjs"
 import { confirmDialog, alertDialog } from "../../components/dialog.mjs"
@@ -78,7 +77,7 @@ template.innerHTML = `
     <div id="posts"></div>
     <br>
     <button id="reply" class="styled">Post a new reply</button>
-    <richtext-component id="reply-editor" class="hidden" nosave submit></richtext-component>
+    <div id="reply-editor-container"></div>
   </div>
 `;
 
@@ -96,8 +95,6 @@ class Element extends HTMLElement {
     this.deleteClicked = this.deleteClicked.bind(this)
 
     this.shadowRoot.getElementById("reply").addEventListener("click", this.replyClicked)
-    this.shadowRoot.getElementById("reply-editor").addEventListener("close", () => this.toggleReplyEditor(false))
-    this.shadowRoot.getElementById("reply-editor").addEventListener("submit", ({detail: {text}}) => this.postReply(text))
     this.shadowRoot.getElementById("delete").addEventListener("click", this.deleteClicked)
 
     this.threadId = this.getAttribute("threadid") || parseInt(/\d+/.exec(state().path)?.[0]);
@@ -167,8 +164,9 @@ class Element extends HTMLElement {
 
   replyClicked(){
     if(!this.threadId) return;
-    this.shadowRoot.getElementById("reply-editor").value("")
     this.toggleReplyEditor(true)
+    this.shadowRoot.getElementById("reply-editor")?.value("")
+    this.shadowRoot.getElementById("reply-editor")?.focus()
   }
 
   postReply(body){
@@ -180,8 +178,21 @@ class Element extends HTMLElement {
   }
 
   toggleReplyEditor(visible){
+    let editor = this.shadowRoot.getElementById("reply-editor")
+    if(!editor){
+      // Don't load the editor, unless it is needed
+      import("/components/richtext.mjs").then(() => {
+        this.shadowRoot.getElementById("reply-editor-container").innerHTML = `<richtext-component id="reply-editor" nosave submit></richtext-component>`
+        editor = this.shadowRoot.getElementById("reply-editor")
+        editor.addEventListener("close", () => this.toggleReplyEditor(false))
+        editor.addEventListener("submit", ({detail: {text}}) => this.postReply(text))
+        editor.focus()
+      })
+    } else {
+      this.shadowRoot.getElementById("reply-editor").classList.toggle("hidden", !visible)
+    }
+
     this.shadowRoot.getElementById("reply").classList.toggle("hidden", visible)
-    this.shadowRoot.getElementById("reply-editor").classList.toggle("hidden", !visible)
   }
 
   async deleteClicked(){
