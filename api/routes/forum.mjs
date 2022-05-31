@@ -40,6 +40,15 @@ export default (app) => {
     res.json(thread.toObj())
   });
 
+  route.patch('/thread/:id', noGuest, function (req, res, next) {
+    if(!validateAccess(req, res, {permission: "forum.thread.edit"})) return;
+    let thread = ForumThread.lookup(req.params.id)
+    if(!thread) throw "Unknown thread"
+    if(!req.body.title || typeof req.body.title !== "string") throw "Invalid title"
+    thread.title = req.body.title
+    res.json({success: true})
+  });
+
   route.post('/thread/:id/posts', noGuest, function (req, res, next) {
     if(!validateAccess(req, res, {permission: "forum.post.create"})) return;
     let thread = ForumThread.lookup(req.params.id)

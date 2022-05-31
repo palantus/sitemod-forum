@@ -7,7 +7,7 @@ import {getUser} from "/system/user.mjs"
 import "/components/action-bar.mjs"
 import "/components/action-bar-item.mjs"
 import "/components/dropdown-menu.mjs"
-import { confirmDialog, alertDialog } from "../../components/dialog.mjs"
+import { confirmDialog, alertDialog, promptDialog } from "../../components/dialog.mjs"
 
 const template = document.createElement('template');
 template.innerHTML = `
@@ -18,6 +18,14 @@ template.innerHTML = `
         padding: 10px;
     }
     h1{margin-bottom:1px;}
+    #edit-title{
+      color: gray;
+      font-size: 60%;
+      position: absolute;
+      top: 10px;
+      cursor: pointer;
+    }
+
     div.post{
       margin-top: 10px;
       border: 1px solid gray;
@@ -82,7 +90,7 @@ template.innerHTML = `
   </action-bar>
 
   <div id="container">
-    <h1 id="title"></h1>
+    <h1><span id="title"></span><span id="edit-title" class="hidden">&#9998;</span></h1>
     <div id="threadinfo"></div>
     <div id="posts"></div>
     <br>
@@ -104,10 +112,12 @@ class Element extends HTMLElement {
     this.refreshData = this.refreshData.bind(this)
     this.deleteClicked = this.deleteClicked.bind(this)
     this.postsClicked = this.postsClicked.bind(this)
+    this.titleEditClicked = this.titleEditClicked.bind(this)
 
     this.shadowRoot.getElementById("reply").addEventListener("click", this.replyClicked)
     this.shadowRoot.getElementById("delete").addEventListener("click", this.deleteClicked)
     this.shadowRoot.getElementById("posts").addEventListener("click", this.postsClicked)
+    this.shadowRoot.getElementById("edit-title").addEventListener("click", this.titleEditClicked)
 
     this.threadId = this.getAttribute("threadid") || parseInt(/\d+/.exec(state().path)?.[0]);
     
@@ -181,6 +191,7 @@ class Element extends HTMLElement {
     `
 
     this.shadowRoot.getElementById("delete").classList.toggle("hidden", (user.id != thread.author.user?.id && !user.permissions.includes("forum.admin")) || !user.permissions.includes("forum.thread.delete"))
+    this.shadowRoot.getElementById("edit-title").classList.toggle("hidden", (user.id != thread.author.user?.id && !user.permissions.includes("forum.admin")) || !user.permissions.includes("forum.thread.edit"))
 
     //Hide actionbar if there aren't any buttons visible
     this.shadowRoot.querySelector("action-bar").classList.toggle("hidden", !!!this.shadowRoot.querySelector("action-bar action-bar-item:not(.hidden)"))
@@ -257,6 +268,14 @@ class Element extends HTMLElement {
           container.appendChild(div)
       })
     }
+  }
+
+  async titleEditClicked(){
+    if(!this.threadId) return;
+    let newTitle = await promptDialog("Enter new title", this.thread.title);
+    if(!newTitle || newTitle == this.thread.title) return;
+    await api.patch(`forum/thread/${this.threadId}`, {title: newTitle})
+    this.refreshData()
   }
 
   static get observedAttributes() {
