@@ -185,7 +185,7 @@ class Element extends HTMLElement {
       <table>
         <tr><td>Id:</td><td id="threadid"><field-ref ref="/forum/thread/${thread.id}"/>${thread.id}</field-ref></td></tr>
         <tr><td>Author:</td><td id="threadauthor">${thread.author.user?.id ? `<field-ref ref="/setup/users/${thread.author.user.id}">${thread.author.name}</field-ref>` : thread.author.name}</td></tr>
-        <tr><td>Date:</td><td id="threaddate">${thread.date.replaceAll("T", " ")}</td></tr>
+        <tr><td>Date:</td><td id="threaddate">${thread.date.replaceAll("T", " ").substring(0, 19)}</td></tr>
         
       </table>
     `
