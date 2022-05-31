@@ -17,7 +17,7 @@ template.innerHTML = `
         position: relative;
         padding: 10px;
     }
-    h1{margin-bottom:1px;}
+    #title-container{margin-bottom:1px;}
     #edit-title{
       color: gray;
       font-size: 60%;
@@ -90,7 +90,7 @@ template.innerHTML = `
   </action-bar>
 
   <div id="container">
-    <h1><span id="title"></span><span id="edit-title" class="hidden">&#9998;</span></h1>
+    <h1 id="title-container"><span id="title"></span><span id="edit-title" class="hidden">&#9998;</span></h1>
     <div id="threadinfo"></div>
     <div id="posts"></div>
     <br>
@@ -272,7 +272,7 @@ class Element extends HTMLElement {
 
   async titleEditClicked(){
     if(!this.threadId) return;
-    let newTitle = await promptDialog("Enter new title", this.thread.title);
+    let newTitle = await promptDialog("Enter new title", this.thread.title, {selectValue: true, title: "Edit thread title"});
     if(!newTitle || newTitle == this.thread.title) return;
     await api.patch(`forum/thread/${this.threadId}`, {title: newTitle})
     this.refreshData()
