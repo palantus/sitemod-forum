@@ -2,7 +2,7 @@ const elementName = 'forumthread-page'
 
 import api from "/system/api.mjs"
 import {on, off, fire} from "/system/events.mjs"
-import {state} from "/system/core.mjs"
+import {state, setPageTitle} from "/system/core.mjs"
 import {getUser} from "/system/user.mjs"
 import "/components/action-bar.mjs"
 import "/components/action-bar-item.mjs"
@@ -153,6 +153,8 @@ class Element extends HTMLElement {
       alertDialog("Thread doesn't exist")
       return;
     }
+
+    setPageTitle(thread.title)
 
     let user = await getUser()
 
