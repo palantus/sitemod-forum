@@ -34,7 +34,8 @@ template.innerHTML = `
       -webkit-box-shadow: 0 0 5px #888;
       box-shadow: 0 0 5px #888;
       border-radius: 3px;
-      background: rgb(250, 250, 250);
+      background: rgba(255, 255, 255, 0.8);
+      color: black;
       position: relative;
     }
 
@@ -72,9 +73,6 @@ template.innerHTML = `
 
     #threadinfo table td{padding-left: 0px;}
     #threadinfo table td:first-child{width: 60px;}
-    #openthread{margin-top: 5px;}
-    #wiki-btn{background-color: #faa}
-    #wiki-btn.haswiki{background-color: #afa}
     .hidden{display: none;}
 
     .postbody.rendered table{border-collapse: collapse;}
@@ -167,7 +165,7 @@ class Element extends HTMLElement {
                       ${p.edited ? "(edited) " + p.edited.replaceAll("T", " ").substring(0, 19) : p.date.replaceAll("T", " ").substring(0, 19)}
                     </div>
                     <dropdown-menu-component class="postoptions" title="Options" width="300px">
-                      <span slot="label" style="font-size: 80%">&vellip;</span>
+                      <span slot="label" style="font-size: 80%" tabindex="0">&vellip;</span>
                       <div slot="content">
                         <h2>Options</h2>
                         <p>You have the following options available:</p>

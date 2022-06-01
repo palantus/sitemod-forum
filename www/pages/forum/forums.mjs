@@ -77,7 +77,7 @@ class Element extends HTMLElement {
         <td>${f.threadCount}</td>
         <td>
           <dropdown-menu-component class="postoptions ${me.permissions.includes("forum.admin") ? "" : "hidden"}" title="Options" width="300px">
-              <span slot="label" style="font-size: 80%">&vellip;</span>
+              <span slot="label" style="font-size: 80%" tabindex="0">&vellip;</span>
               <div slot="content">
                 <h2>Options</h2>
                 <div>
