@@ -116,4 +116,14 @@ export default (app) => {
     }
     res.json({success: true})
   });
+
+  route.patch('/:id', noGuest, function (req, res, next) {
+    if(!validateAccess(req, res, {permission: "forum.admin"})) return;
+    let forum = Forum.lookup(req.params.id)
+    if(!forum) throw "Unknown forum"
+    if(!req.body.name || typeof req.body.name !== "string") throw "Invalid name"
+    forum.name = req.body.name
+    res.json({success: true})
+  });
+
 };

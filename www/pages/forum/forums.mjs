@@ -4,9 +4,10 @@ import api from "/system/api.mjs"
 import {on, off} from "/system/events.mjs"
 import {goto} from "/system/core.mjs"
 import "/components/field-ref.mjs"
-import "/components/field.mjs"
+import "/components/field-edit.mjs"
 import "/components/action-bar.mjs"
 import "/components/action-bar-item.mjs"
+import "/components/dropdown-menu.mjs"
 
 const template = document.createElement('template');
 template.innerHTML = `
@@ -33,8 +34,8 @@ template.innerHTML = `
         <thead>
             <tr>
               <th>Name</th>
-              <th>Language</th>
-              <th>Threads</th>
+              <th>Thread count</th>
+              <th></th>
             </tr>
         </thead>
         <tbody id="forums">
@@ -57,17 +58,36 @@ class Element extends HTMLElement {
 
   async refreshData(){
 
-    let {forums} = await api.query(`{
+    let {forums, me} = await api.query(`{
       forums{
         id, name, language, threadCount
-      }
+      },
+      me{id, permissions}
     }`)
 
     this.shadowRoot.getElementById("forums").innerHTML = forums.sort((a,b) => a.name < b.name ? -1 : 1).map(f => `
       <tr>
-        <td><field-ref ref="/forum/${f.id}">${f.name}</field-ref></td>
-        <td>${f.language}</td>
+        <td>
+          <span class="forum-name">
+            <field-ref ref="/forum/${f.id}">${f.name}</field-ref>
+          </span>
+          <span>
+            
+        </td>
         <td>${f.threadCount}</td>
+        <td>
+          <dropdown-menu-component class="postoptions ${me.permissions.includes("forum.admin") ? "" : "hidden"}" title="Options" width="300px">
+              <span slot="label" style="font-size: 80%">&vellip;</span>
+              <div slot="content">
+                <h2>Options</h2>
+                <div>
+                  <label>Name:</label>
+                  <field-edit type="text" field="name" patch="forum/${f.id}" value="${f.name}"></field-edit>
+                </div>
+              </div>
+            </dropdown-menu-component>
+          </span>
+        </td>
       </tr>
     `).join("")
   }
