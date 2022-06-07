@@ -99,6 +99,11 @@ template.innerHTML = `
 
   <dialog-component title="Add file" id="add-file-dialog">
     <input type="file" multiple>
+    <br><br><br>
+    <h3>Access:</h3>
+    <p>Select the following checkbox, if all other forum users should be able to view the file. If you do not select this, only forum admins can see the file. Before selecting it, please make sure that it doesn't contain any sensitive information.</p>
+    <label for="file-access-all">All forum users</label>
+    <input id="file-access-all" type="checkbox"></input>
   </dialog-component>
 `;
 
@@ -299,14 +304,11 @@ class Element extends HTMLElement {
     return new Promise((resolve, reject) => {
       let dialog = this.shadowRoot.getElementById("add-file-dialog")
       showDialog(dialog, {
-        show: () => {
-          dialog.querySelector("input").focus();
-        },
         ok: async (val) => {
           let formData = new FormData();
           for(let file of dialog.querySelector("input[type=file]").files)
             formData.append("file", file);
-          let file = (await api.upload(`file/tag/forum-file/upload?acl=r:shared;w:private`, formData))?.[0];
+          let file = (await api.upload(`file/tag/forum-file/upload?acl=r:${val.accessAll?"role:forum":"role:forum-admin"};w:private`, formData))?.[0];
           if(file){
             await api.post(`forum/thread/${this.threadId}/files`, {fileId: file.id})
             return resolve()
@@ -319,7 +321,7 @@ class Element extends HTMLElement {
             /*!val.tag && !folder ? "Please fill out tag"
           : */true,
         values: () => {return {
-          //tag: dialog.querySelector("#new-tag").value,
+          accessAll: dialog.querySelector("#file-access-all").checked,
         }},
         close: () => {
           dialog.querySelectorAll("field-component input").forEach(e => e.value = '')
