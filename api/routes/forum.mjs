@@ -8,6 +8,7 @@ import Forum from "../../models/forum.mjs";
 import ForumPost from "../../models/post.mjs";
 import User from "../../../../models/user.mjs";
 import { getTimestamp } from "../../../../tools/date.mjs";
+import File from "../../../files/models/file.mjs"
 
 export default (app) => {
 
@@ -60,6 +61,29 @@ export default (app) => {
     post.updateHTML()
     thread.rel(post, "post")
     res.json(post.toObj())
+  });
+
+  route.post('/thread/:id/files', noGuest, function (req, res, next) {
+    if(!validateAccess(req, res, {permission: "forum.thread.attach-file"})) return;
+    let thread = ForumThread.lookup(req.params.id)
+    if(!thread) throw "Unknown thread"
+    if(!req.body.fileId || typeof req.body.fileId !== "number") throw "No fileId"
+    let file = File.lookup(req.body.fileId)
+    if(!file || !file.hasAccess(res.locals.user)) throw "Invalid file or you do not have access to it"
+    thread.rel(file, "file")
+    res.json({success: true})
+  });
+
+  route.delete('/thread/:id/file/:fileId', noGuest, function (req, res, next) {
+    if(!validateAccess(req, res, {permission: "forum.thread.attach-file"})) return;
+    let thread = ForumThread.lookup(req.params.id)
+    if(!thread) throw "Unknown thread"
+    if(!req.params.fileId || isNaN(req.params.fileId)) throw "No fileId"
+    let file = File.lookup(req.params.fileId)
+    if(!file || !file.hasAccess(res.locals.user)) throw "Invalid file or you do not have access to it"
+    if(thread.related.owner?.id != res.locals.user.id && !validateAccess(req, res, {permission: "forum.admin"})) throw "No access"
+    file.delete();
+    res.json({success: true})
   });
 
   route.delete("/thread/:id", noGuest, (req, res) => {

@@ -2,6 +2,7 @@ import Entity, { query, nextNum } from "entitystorage"
 import { getTimestamp } from "../../../tools/date.mjs"
 import ForumPost from "./post.mjs"
 import User from "../../../models/user.mjs"
+import File from "../../files/models/file.mjs"
 
 export default class ForumThread extends Entity {
 
@@ -23,8 +24,13 @@ export default class ForumThread extends Entity {
     return (this.rels.post||[]).map(p => ForumPost.from(p))
   }
 
+  get files() {
+    return (this.rels.file||[]).map(p => File.from(p))
+  }
+
   delete(){
     this.posts.forEach(p => p.delete())
+    this.files.forEach(f => f.delete())
     super.delete()
   }
 

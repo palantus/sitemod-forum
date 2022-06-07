@@ -2,12 +2,13 @@ const elementName = 'forumthread-page'
 
 import api from "/system/api.mjs"
 import {on, off, fire} from "/system/events.mjs"
-import {state, setPageTitle} from "/system/core.mjs"
+import {state, setPageTitle, goto} from "/system/core.mjs"
 import {getUser} from "/system/user.mjs"
 import "/components/action-bar.mjs"
 import "/components/action-bar-item.mjs"
 import "/components/dropdown-menu.mjs"
-import { confirmDialog, alertDialog, promptDialog } from "../../components/dialog.mjs"
+import "/components/list-inline.mjs"
+import { confirmDialog, alertDialog, promptDialog, showDialog } from "../../components/dialog.mjs"
 
 const template = document.createElement('template');
 template.innerHTML = `
@@ -72,7 +73,7 @@ template.innerHTML = `
     }
 
     #threadinfo table td{padding-left: 0px;}
-    #threadinfo table td:first-child{width: 60px;}
+    #threadinfo table td:first-child{width: 60px; vertical-align: top;}
     .hidden{display: none;}
 
     .postbody.rendered table{border-collapse: collapse;}
@@ -95,6 +96,10 @@ template.innerHTML = `
     <button id="reply" class="styled">Post new reply</button>
     <div id="reply-editor-container"></div>
   </div>
+
+  <dialog-component title="Add file" id="add-file-dialog">
+    <input type="file" multiple>
+  </dialog-component>
 `;
 
 class Element extends HTMLElement {
@@ -111,6 +116,7 @@ class Element extends HTMLElement {
     this.deleteClicked = this.deleteClicked.bind(this)
     this.postsClicked = this.postsClicked.bind(this)
     this.titleEditClicked = this.titleEditClicked.bind(this)
+    this.addFile = this.addFile.bind(this)
 
     this.shadowRoot.getElementById("reply").addEventListener("click", this.replyClicked)
     this.shadowRoot.getElementById("delete").addEventListener("click", this.deleteClicked)
@@ -143,7 +149,7 @@ class Element extends HTMLElement {
     let {forumThread: thread} = await api.query(`{
       forumThread(id: ${threadId}){
         id, title, author{name, user{id}}, date
-        posts{id, author{name, user{id}}, date, edited, body, bodyHTML},
+        posts{id, author{name, user{id}}, date, edited, body, bodyHTML}
       }
     }`)
 
@@ -186,9 +192,20 @@ class Element extends HTMLElement {
         <tr><td>Id:</td><td id="threadid"><field-ref ref="/forum/thread/${thread.id}"/>${thread.id}</field-ref></td></tr>
         <tr><td>Author:</td><td id="threadauthor">${thread.author.user?.id ? `<field-ref ref="/setup/users/${thread.author.user.id}">${thread.author.name}</field-ref>` : thread.author.name}</td></tr>
         <tr><td>Date:</td><td id="threaddate">${thread.date.replaceAll("T", " ").substring(0, 19)}</td></tr>
-        
+        <tr><td>Files: </td><td><list-inline-component id="files"></list-inline-component></td></tr>
       </table>
     `
+
+    let fileContainer = this.shadowRoot.getElementById("files")
+    fileContainer.setup({
+      add: this.addFile,
+      validateAdd: () => true,
+      remove: async file => api.del(`forum/thread/${this.threadId}/file/${file.id}`),
+      validateRemove: file => confirmDialog(`Are you sure that you want to remove file "${file.name}"?`),
+      getData: async () => (await api.query(`{forumThread(id: ${this.threadId}){files{id,name}}}`)).forumThread.files,
+      toHTML: file => `<span>${file.name}</span>`,
+      click: file => goto(`/file/${file.id}`)
+    })
 
     this.shadowRoot.getElementById("delete").classList.toggle("hidden", (user.id != thread.author.user?.id && !user.permissions.includes("forum.admin")) || !user.permissions.includes("forum.thread.delete"))
     this.shadowRoot.getElementById("edit-title").classList.toggle("hidden", (user.id != thread.author.user?.id && !user.permissions.includes("forum.admin")) || !user.permissions.includes("forum.thread.edit"))
@@ -276,6 +293,39 @@ class Element extends HTMLElement {
     if(!newTitle || newTitle == this.thread.title) return;
     await api.patch(`forum/thread/${this.threadId}`, {title: newTitle})
     this.refreshData()
+  }
+
+  async addFile(){
+    return new Promise((resolve, reject) => {
+      let dialog = this.shadowRoot.getElementById("add-file-dialog")
+      showDialog(dialog, {
+        show: () => {
+          dialog.querySelector("input").focus();
+        },
+        ok: async (val) => {
+          let formData = new FormData();
+          for(let file of dialog.querySelector("input[type=file]").files)
+            formData.append("file", file);
+          let file = (await api.upload(`file/tag/forum-file/upload?acl=r:shared;w:private`, formData))?.[0];
+          if(file){
+            await api.post(`forum/thread/${this.threadId}/files`, {fileId: file.id})
+            return resolve()
+          } else {
+            alertDialog("Could not attach file. Try again.")
+          }
+          reject();
+        },
+        validate: (val) => 
+            /*!val.tag && !folder ? "Please fill out tag"
+          : */true,
+        values: () => {return {
+          //tag: dialog.querySelector("#new-tag").value,
+        }},
+        close: () => {
+          dialog.querySelectorAll("field-component input").forEach(e => e.value = '')
+        }
+      })
+    })
   }
 
   static get observedAttributes() {

@@ -25,6 +25,15 @@ export const ForumAuthorType = new GraphQLObjectType({
   })
 })
 
+export const ForumFileType = new GraphQLObjectType({
+  name: 'ForumFileType',
+  description: 'This represents a forum file',
+  fields: () => ({
+    id: { type: GraphQLNonNull(GraphQLInt), resolve: t => t._id },
+    name: { type: GraphQLNonNull(GraphQLString) }
+  })
+})
+
 export const ForumPostType = new GraphQLObjectType({
   name: 'ForumPost',
   description: 'This represents a forum post',
@@ -45,7 +54,8 @@ export let forumThreadFields = {
   title: { type: GraphQLNonNull(GraphQLString) },
   url: { type: GraphQLString },
   postCount: {type: GraphQLInt, resolve: t => t.relsrev?.thread?.length || 0},
-  posts: {type: GraphQLList(ForumPostType), resolve: t => t.posts},
+  posts: {type: GraphQLList(ForumPostType)},
+  files: {type: GraphQLList(ForumFileType)}
 }
 
 export const ForumThreadType = new GraphQLObjectType({
