@@ -75,12 +75,12 @@ export default (app) => {
   });
 
   route.delete('/thread/:id/file/:fileId', noGuest, function (req, res, next) {
-    if(!validateAccess(req, res, {permission: "forum.thread.attach-file"})) return;
+    if(!validateAccess(req, res, {permission: "forum.thread.edit"})) return;
     let thread = ForumThread.lookup(req.params.id)
     if(!thread) throw "Unknown thread"
     if(!req.params.fileId || isNaN(req.params.fileId)) throw "No fileId"
     let file = File.lookup(req.params.fileId)
-    if(!file || !file.hasAccess(res.locals.user)) throw "Invalid file or you do not have access to it"
+    if(!file || !file.hasAccess(res.locals.user, "w")) throw "Invalid file or you do not have access to it"
     if(thread.related.owner?.id != res.locals.user.id && !validateAccess(req, res, {permission: "forum.admin"})) throw "No access"
     file.delete();
     res.json({success: true})

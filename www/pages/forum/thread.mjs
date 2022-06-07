@@ -203,9 +203,9 @@ class Element extends HTMLElement {
 
     let fileContainer = this.shadowRoot.getElementById("files")
     fileContainer.setup({
-      add: this.addFile,
+      add: user.permissions.includes("forum.thread.attach-file") ? this.addFile : undefined,
       validateAdd: () => true,
-      remove: async file => api.del(`forum/thread/${this.threadId}/file/${file.id}`),
+      remove: user.permissions.includes("forum.thread.edit") ? async file => api.del(`forum/thread/${this.threadId}/file/${file.id}`) : undefined,
       validateRemove: file => confirmDialog(`Are you sure that you want to remove file "${file.name}"?`),
       getData: async () => (await api.query(`{forumThread(id: ${this.threadId}){files{id,name}}}`)).forumThread.files,
       toHTML: file => `<span>${file.name}</span>`,
@@ -308,7 +308,7 @@ class Element extends HTMLElement {
           let formData = new FormData();
           for(let file of dialog.querySelector("input[type=file]").files)
             formData.append("file", file);
-          let file = (await api.upload(`file/tag/forum-file/upload?acl=r:${val.accessAll?"role:forum":"role:forum-admin"};w:private`, formData))?.[0];
+          let file = (await api.upload(`file/tag/forum-file/upload?acl=r:${val.accessAll?"permission:forum.read":"permission:forum.admin"};w:permission:forum.admin`, formData))?.[0];
           if(file){
             await api.post(`forum/thread/${this.threadId}/files`, {fileId: file.id})
             return resolve()
