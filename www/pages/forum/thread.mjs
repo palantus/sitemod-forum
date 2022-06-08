@@ -203,7 +203,7 @@ class Element extends HTMLElement {
 
     let fileContainer = this.shadowRoot.getElementById("files")
     fileContainer.setup({
-      add: user.permissions.includes("forum.thread.attach-file") ? this.addFile : undefined,
+      add: user.permissions.includes("forum.thread.attach-file") && user.permissions.includes("forum.thread.edit") ? this.addFile : undefined,
       validateAdd: () => true,
       remove: user.permissions.includes("forum.thread.edit") ? async file => api.del(`forum/thread/${this.threadId}/file/${file.id}`) : undefined,
       validateRemove: file => confirmDialog(`Are you sure that you want to remove file "${file.name}"?`),
@@ -214,6 +214,7 @@ class Element extends HTMLElement {
 
     this.shadowRoot.getElementById("delete").classList.toggle("hidden", (user.id != thread.author.user?.id && !user.permissions.includes("forum.admin")) || !user.permissions.includes("forum.thread.delete"))
     this.shadowRoot.getElementById("edit-title").classList.toggle("hidden", (user.id != thread.author.user?.id && !user.permissions.includes("forum.admin")) || !user.permissions.includes("forum.thread.edit"))
+    this.shadowRoot.getElementById("reply").classList.toggle("hidden", !user.permissions.includes("forum.post.create"))
 
     //Hide actionbar if there aren't any buttons visible
     this.shadowRoot.querySelector("action-bar").classList.toggle("hidden", !!!this.shadowRoot.querySelector("action-bar action-bar-item:not(.hidden)"))
