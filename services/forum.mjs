@@ -11,7 +11,9 @@ export let tokens = [
   {keywords: ["active"], title: "Search for active threads only", resolve: token => `!tag:closed`},
   {keywords: ["language", "lang", "l"], title: "Threads in specific language forums (eg. 'dk')", resolve: token => `forum.prop:"language=${token}"`},
   {keywords: ["author", "by"], title: "Specific author", resolve: token => `(prop:"authorName~${token}"|owner.prop:"name~${token}")`},
+  {keywords: ["authoruser", "byuser"], title: "Specific author (user id)", resolve: token => `owner.prop:"id=${token}"`},
   {keywords: ["with"], title: "Participant of thread", resolve: token => `(post.prop:"authorName~${token}"|post.owner.prop:"name~${token}")`},
+  {keywords: ["withuser"], title: "Participant of thread (user id)", resolve: token => `post.owner.prop:"id=${token}"`},
   {keywords: [null], title: "Text search", resolve: token => `(prop:"title~${token}"|prop:"authorName~${token}"|post.prop:"body~${token}"|prop:"id=${token}"|post.owner.prop:"name~${token}")`}
 ]
 

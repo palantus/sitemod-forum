@@ -171,7 +171,7 @@ class Element extends HTMLElement {
     this.shadowRoot.getElementById("posts").innerHTML = thread.posts.sort((a, b) => a.date < b.date ? -1 : 1)
                                                                     .map(p => `
                   <div class="post" data-postId="${p.id}">
-                    <div class="postauthor">${p.author.user?.id ? `<field-ref ref="/setup/users/${p.author.user.id}">${p.author.name}</field-ref>` : p.author.name}</div>
+                    <div class="postauthor">${p.author.user?.id ? `<field-ref ref="/forum/profile/${p.author.user.id}">${p.author.name}</field-ref>` : p.author.name}</div>
                     <div class="postdate" title="Originally posted: ${p.date.replaceAll("T", " ").substring(0, 19)}\nEdited: ${p.edited? p.edited.replaceAll("T", " ").substring(0, 19) : "<never>"}">
                       ${p.edited ? "(edited) " + p.edited.replaceAll("T", " ").substring(0, 19) : p.date.replaceAll("T", " ").substring(0, 19)}
                     </div>
@@ -195,7 +195,7 @@ class Element extends HTMLElement {
     threadInfoContainer.innerHTML = `
       <table>
         <tr><td>Id:</td><td id="threadid"><field-ref ref="/forum/thread/${thread.id}"/>${thread.id}</field-ref></td></tr>
-        <tr><td>Author:</td><td id="threadauthor">${thread.author.user?.id ? `<field-ref ref="/setup/users/${thread.author.user.id}">${thread.author.name}</field-ref>` : thread.author.name}</td></tr>
+        <tr><td>Author:</td><td id="threadauthor">${thread.author.user?.id ? `<field-ref ref="/forum/profile/${thread.author.user.id}">${thread.author.name}</field-ref>` : thread.author.name}</td></tr>
         <tr><td>Date:</td><td id="threaddate">${thread.date.replaceAll("T", " ").substring(0, 19)}</td></tr>
         <tr><td>Files: </td><td><list-inline-component id="files"></list-inline-component></td></tr>
       </table>

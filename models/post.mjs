@@ -2,6 +2,7 @@ import Entity, {nextNum, query} from "entitystorage"
 import { getTimestamp } from "../../../tools/date.mjs"
 import {md2html} from "../../../tools/markdown.mjs"
 import User from "../../../models/user.mjs"
+import ForumThread from "./thread.mjs"
 
 export default class ForumPost extends Entity {
 
@@ -14,6 +15,11 @@ export default class ForumPost extends Entity {
   static lookup(id){
     if(!id) return null
     return query.type(ForumPost).tag("forumpost").prop("id", id).first
+  }
+
+  static allByAuthor(user){
+    if(!user) return [];
+    return query.type(ForumPost).tag("forumpost").relatedTo(user, "owner").all
   }
 
   updateHTML(){
@@ -32,11 +38,14 @@ export default class ForumPost extends Entity {
     }
   }
 
+  get thread(){
+    return ForumThread.from(this.relsrev.post?.[0])
+  }
+
   toObj(){
     let author = this.author
     return {
       id: this.id,
-      thread: this.thread,
       body: this.body || "",
       bodyHTML: this.bodyHTML || null,
       date: this.date,

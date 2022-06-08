@@ -16,8 +16,14 @@ export default class ForumThread extends Entity {
     if(!id) return null
     return query.type(ForumThread).tag("forumthread").prop("id", id).first
   }
+
   static all(){
     return query.type(ForumThread).tag("forumthread").all
+  }
+
+  static allByAuthor(user){
+    if(!user) return [];
+    return query.type(ForumThread).tag("forumthread").relatedTo(user, "owner").all
   }
 
   get posts() {

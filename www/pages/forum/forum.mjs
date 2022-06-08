@@ -109,9 +109,7 @@ class Element extends HTMLElement {
     this.shadowRoot.querySelector('input').value = q;
     //this.shadowRoot.querySelector("table-paging").page = 1
 
-    this.clearResults()
-    await this.fillResults(0, 80)
-    this.appendResults(0, 80)
+    this.clearAndRefreshResults()
   }
 
   async clearAndRefreshResults(){
@@ -193,9 +191,9 @@ class Element extends HTMLElement {
 
   connectedCallback() {
     this.shadowRoot.querySelector('input').focus();
-    this.queryChanged(state().query.filter||"");
+    on("first-page-load", elementName, (state) => this.queryChanged(state.query.filter || ""))
     on("changed-page-query", elementName, (query) => this.queryChanged(query.filter || ""))
-    on("returned-to-page", elementName, this.clearAndRefreshResults)
+    on("returned-to-page", elementName, (state) => this.queryChanged(state.query.filter || ""))
     this.parentNode.addEventListener("scroll",this.onScroll,false);
     this.parentNodeSaved = this.parentNode;
   }
