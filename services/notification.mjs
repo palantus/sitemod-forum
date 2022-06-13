@@ -12,7 +12,7 @@ export async function sendMailsNewThread(thread){
     try{
       await new MailSender().send({
         to: user.email, 
-        subject: `${CoreSetup.lookup().siteTitle}: New thread on forum`, 
+        subject: `${CoreSetup.lookup().siteTitle}: New thread on forums`, 
         body: `
           <div>
             <h3>Hello ${user.name}</h3>
@@ -32,5 +32,39 @@ export async function sendNotificationsNewThread(thread){
   for(let user of query.type(User).tag("user").relatedTo(query.prop("notifyAllNewThreads", true)).all){
     if(user.id == thread.related.owner?.id) continue; // No need to notify author
     user.notify("wiki", thread.title, {title: "New thread on forums", refs: [{uiPath: `/forum/thread/${thread.id}`, title: "Go to thread"}]})
+  }
+}
+
+export async function sendMailsNewPosts(thread, post){
+
+  for(let user of query.tag("user").relatedTo(query.prop("emailMeOnForumUpdates", true)).all){
+    if(!user.email) continue;
+    if(user.id == thread.related.owner?.id) continue; // No need to notify author
+    if(!thread.rels.subscribee?.find(u => u.id == user.id)) continue; // Not subscribed to thread
+    try{
+      await new MailSender().send({
+        to: user.email, 
+        subject: `${CoreSetup.lookup().siteTitle}: New reply on forums`, 
+        body: `
+          <div>
+            <h3>Hello ${user.name}</h3>
+            <p>A new reply by ${post.author.name} has been posted to the following thread:</p>
+            <a href="${global.sitecore.siteURL}/forum/thread/${thread.id}">${thread.title}</a>
+          </div>
+        `,
+        bodyType: "html"
+      })
+    } catch(err){
+      new LogEntry(`Could not send email to ${user.email}. Error: ${err}`, "forum")
+    }
+  }
+}
+
+export async function sendNotificationsNewPosts(thread, post){
+  for(let user of query.type(User).tag("user").all){
+    console.log(user.id, post.related.owner?.id)
+    if(user.id == post.related.owner?.id) continue; // No need to notify author
+    if(!thread.rels.subscribee?.find(u => u.id == user.id)) continue; // Not subscribed to thread
+    user.notify("wiki", thread.title, {title: `${post.author.name} has replied on a forum thread`, refs: [{uiPath: `/forum/thread/${thread.id}`, title: "Go to thread"}]})
   }
 }

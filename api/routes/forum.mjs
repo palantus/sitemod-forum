@@ -9,7 +9,7 @@ import ForumPost from "../../models/post.mjs";
 import User from "../../../../models/user.mjs";
 import { getTimestamp } from "../../../../tools/date.mjs";
 import File from "../../../files/models/file.mjs"
-import { sendMailsNewThread, sendNotificationsNewThread } from "../../services/notification.mjs";
+import { sendMailsNewPosts, sendMailsNewThread, sendNotificationsNewPosts, sendNotificationsNewThread } from "../../services/notification.mjs";
 
 export default (app) => {
 
@@ -38,6 +38,7 @@ export default (app) => {
     let thread = new ForumThread()
     thread.title = req.body.title
     thread.rel(res.locals.user, "owner")
+    thread.subscribe(res.locals.user)
     forum.rel(thread, "thread")
     res.json(thread.toObj())
   });
@@ -61,10 +62,15 @@ export default (app) => {
     post.rel(res.locals.user, "owner")
     post.updateHTML()
     thread.rel(post, "post")
+    thread.subscribe(res.locals.user)
 
-    if(thread.rels.post?.length == 1){
+    let numReplies = thread.rels.post?.length || 0;
+    if(numReplies == 1){
       sendNotificationsNewThread(thread)
       sendMailsNewThread(thread)
+    } else if(numReplies > 1){
+      sendNotificationsNewPosts(thread, post)
+      sendMailsNewPosts(thread, post)
     }
 
     res.json(post.toObj())

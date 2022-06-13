@@ -26,6 +26,14 @@ export default class ForumThread extends Entity {
     return query.type(ForumThread).tag("forumthread").relatedTo(user, "owner").all
   }
 
+  subscribe(user){
+    this.rel(user, "subscribee")
+  }
+
+  unsubscribe(user){
+    this.removeRel(user, "subscribee")
+  }
+
   get posts() {
     return (this.rels.post||[]).map(p => ForumPost.from(p))
   }
