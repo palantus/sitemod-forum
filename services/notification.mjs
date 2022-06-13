@@ -15,11 +15,8 @@ export async function sendMailsThread(thread){
         body: `
           <div>
             <h3>Hello ${user.name}</h3>
-            <p>A new thread has been posted in the forums. It is titled:</p>
-            <p>${thread.title}</p>
-            <div>
-              <a href="${global.sitecore.siteURL}/forum/thread/${thread.id}">Go to thread</a>
-            </div>
+            <p>A new thread has been posted in the forums:</p>
+            <a href="${global.sitecore.siteURL}/forum/thread/${thread.id}">${thread.title}</a>
           </div>
         `,
         bodyType: "html"
