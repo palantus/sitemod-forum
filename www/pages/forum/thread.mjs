@@ -91,6 +91,7 @@ template.innerHTML = `
   <div id="container">
     <h1 id="title-container"><span id="title"></span><span id="edit-title" class="hidden">&#9998;</span></h1>
     <div id="threadinfo"></div>
+    <button class="styled" id="subscribe">Subscribe</button>
     <div id="posts"></div>
     <br>
     <button id="reply" class="styled">Post new reply</button>
@@ -122,11 +123,13 @@ class Element extends HTMLElement {
     this.postsClicked = this.postsClicked.bind(this)
     this.titleEditClicked = this.titleEditClicked.bind(this)
     this.addFile = this.addFile.bind(this)
+    this.subscribeClicked = this.subscribeClicked.bind(this)
 
     this.shadowRoot.getElementById("reply").addEventListener("click", this.replyClicked)
     this.shadowRoot.getElementById("delete").addEventListener("click", this.deleteClicked)
     this.shadowRoot.getElementById("posts").addEventListener("click", this.postsClicked)
     this.shadowRoot.getElementById("edit-title").addEventListener("click", this.titleEditClicked)
+    this.shadowRoot.getElementById("subscribe").addEventListener("click", this.subscribeClicked);
 
     this.threadId = this.getAttribute("threadid") || parseInt(/\d+/.exec(state().path)?.[0]);
     
@@ -153,7 +156,7 @@ class Element extends HTMLElement {
 
     let {forumThread: thread} = await api.query(`{
       forumThread(id: ${threadId}){
-        id, title, author{name, user{id}}, date
+        id, title, author{name, user{id}}, date, isSubscribed
         posts{id, author{name, user{id}}, date, edited, body, bodyHTML}
       }
     }`)
@@ -188,6 +191,8 @@ class Element extends HTMLElement {
                   </div>`).join("")
 
     this.shadowRoot.getElementById("title").innerText = thread.title
+    this.shadowRoot.getElementById("subscribe").innerText = thread.isSubscribed ? "Unsubscribe" : "Subscribe"
+    this.shadowRoot.getElementById("subscribe").toggleAttribute("subscribed", thread.isSubscribed)
 
     let threadInfoContainer = this.shadowRoot.getElementById("threadinfo")
     threadInfoContainer.style.display = "block";
@@ -329,6 +334,16 @@ class Element extends HTMLElement {
         }
       })
     })
+  }
+
+  async subscribeClicked(){
+    let isSubscribed = this.shadowRoot.getElementById("subscribe").hasAttribute("subscribed")
+
+    await api.patch(`forum/thread/${this.threadId}`, {subscribe: !isSubscribed})
+    let {forumThread: thread} = await api.query(`{forumThread(id: ${this.threadId}){isSubscribed}}`)
+
+    this.shadowRoot.getElementById("subscribe").innerText = thread.isSubscribed ? "Unsubscribe" : "Subscribe"
+    this.shadowRoot.getElementById("subscribe").toggleAttribute("subscribed", thread.isSubscribed)
   }
 
   static get observedAttributes() {

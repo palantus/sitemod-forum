@@ -47,8 +47,15 @@ export default (app) => {
     if(!validateAccess(req, res, {permission: "forum.thread.edit"})) return;
     let thread = ForumThread.lookup(req.params.id)
     if(!thread) throw "Unknown thread"
-    if(!req.body.title || typeof req.body.title !== "string") throw "Invalid title"
-    thread.title = req.body.title
+    if(req.body.title) {
+      if(!req.body.title || typeof req.body.title !== "string") throw "Invalid title"
+      thread.title = req.body.title
+    }
+
+    if(typeof req.body.subscribe === "boolean"){
+      if(req.body.subscribe) thread.subscribe(res.locals.user)
+      else thread.unsubscribe(res.locals.user)
+    }
     res.json({success: true})
   });
 
