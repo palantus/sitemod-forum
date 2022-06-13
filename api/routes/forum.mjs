@@ -9,7 +9,7 @@ import ForumPost from "../../models/post.mjs";
 import User from "../../../../models/user.mjs";
 import { getTimestamp } from "../../../../tools/date.mjs";
 import File from "../../../files/models/file.mjs"
-import { sendMailsThread, sendNotificationsThread } from "../../services/notification.mjs";
+import { sendMailsNewThread, sendNotificationsNewThread } from "../../services/notification.mjs";
 
 export default (app) => {
 
@@ -63,8 +63,8 @@ export default (app) => {
     thread.rel(post, "post")
 
     if(thread.rels.post?.length == 1){
-      sendNotificationsThread(thread)
-      sendMailsThread(thread)
+      sendNotificationsNewThread(thread)
+      sendMailsNewThread(thread)
     }
 
     res.json(post.toObj())

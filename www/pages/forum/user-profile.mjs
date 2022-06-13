@@ -21,9 +21,9 @@ template.innerHTML = `
 
   <div id="container">
     <h2>Forum</h2>
-    <field-list labels-pct="50">
-      <field-edit label="E-mail on new threads" title="Receive an e-mail notification every time a thread is posted" type="checkbox" id="emailOnThreads"></field-edit>
-      <field-edit label="E-mail on replies" title="Receive an e-mail notification every time a reply is posted to a thread that you have authored or participated in" type="checkbox" id="emailOnPosts"></field-edit>
+    <field-list labels-pct="70">
+      <field-edit label="E-mail me with updates" title="Will send you an email every time something happens (e.g. a new post on a subscribed thread)" type="checkbox" id="emailMeOnForumUpdates"></field-edit>
+      <field-edit label="Notify me about new threads" title="Receive an e-mail notification every time a thread is posted" type="checkbox" id="notifyAllNewThreads"></field-edit>
     </field-list>
   </div>
 `;
@@ -43,8 +43,8 @@ class Element extends HTMLElement {
   async refreshData(){
     let setup = await api.get("me/setup")
     
-    this.shadowRoot.getElementById("emailOnThreads").setAttribute("value", !!setup.emailOnThreads)
-    this.shadowRoot.getElementById("emailOnPosts").setAttribute("value", !!setup.emailOnPosts)
+    this.shadowRoot.getElementById("emailMeOnForumUpdates").setAttribute("value", !!setup.emailMeOnForumUpdates)
+    this.shadowRoot.getElementById("notifyAllNewThreads").setAttribute("value", !!setup.notifyAllNewThreads)
 
     this.shadowRoot.querySelectorAll("field-edit:not([disabled])").forEach(e => e.setAttribute("patch", `forum/me/setup`));
   }

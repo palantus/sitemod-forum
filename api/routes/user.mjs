@@ -13,8 +13,9 @@ export default (app) => {
   meRoute.patch('/setup', noGuest, function (req, res, next) {
     let u = service(res.locals).me()
     if (!u) throw "No user"
-    if(typeof req.body.emailOnThreads === "boolean") u.setup.emailOnThreads = !!req.body.emailOnThreads;
-    if(typeof req.body.emailOnPosts === "boolean") u.setup.emailOnPosts = !!req.body.emailOnPosts;
+
+    if(typeof req.body.emailMeOnForumUpdates === "boolean") u.setup.emailMeOnForumUpdates = !!req.body.emailMeOnForumUpdates;
+    if(typeof req.body.notifyAllNewThreads === "boolean") u.setup.notifyAllNewThreads = !!req.body.notifyAllNewThreads;
     res.json({success: true})
   });
 };
