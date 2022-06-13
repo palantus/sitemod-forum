@@ -1,4 +1,4 @@
-import forumService from "../../services/forum.mjs"
+import forumService from "../../services/search.mjs"
 import { PageableResultInfo, PageableSearchArgsType } from "../../../../api/graphql/common.mjs"
 import Entity, { query } from "entitystorage"
 import {
