@@ -39,7 +39,7 @@ export const ForumAuthorType = new GraphQLObjectType({
   description: 'This represents a forum author',
   fields: () => ({
     name: { type: GraphQLNonNull(GraphQLString) },
-    user: { type: UserType }
+    user: { type: UserType, resolve: (author, args, context) => context.user.permissions.includes("user.read") ? author.user : null}
   })
 })
 
@@ -146,12 +146,12 @@ export default {
       type: ForumProfileType,
       description: "User forum profile",
       args: {
-        id: { type: GraphQLString },
+        name: { type: GraphQLNonNull(GraphQLString) },
         returnCount: { type: GraphQLInt },
       },
       resolve: (parent, args, context) => {
         ifPermissionThrow(context, "forum.read");
-        let user = User.lookup(args.id)
+        let user = User.lookupName(args.name)
         if(!user) return null;
         let threads = ForumThread.allByAuthor(user)
         let posts = ForumPost.allByAuthor(user)

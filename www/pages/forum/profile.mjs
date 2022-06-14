@@ -51,7 +51,7 @@ class Element extends HTMLElement {
     this.attachShadow({ mode: 'open' });
     this.shadowRoot.appendChild(template.content.cloneNode(true));
 
-    this.userId = /\/forum\/profile\/([a-zA-Z0-9\-_@&.]+)/.exec(state().path)[1]
+    this.userName = state().query.name
     this.refreshData = this.refreshData.bind(this)
 
     this.shadowRoot.getElementById("view-all-threads").addEventListener("click", () => goto(`/forum?filter=authoruser%3A${this.userId}`))
@@ -60,7 +60,7 @@ class Element extends HTMLElement {
 
   async refreshData(){
     
-    let profile = (await api.query(`{forumProfile(id: "${this.userId}", returnCount: 10) {id, name, threadCount, postCount, threads{id, date, title}, posts{id, date, thread{id, title}}}}`)).forumProfile
+    let profile = (await api.query(`{forumProfile(name: "${this.userName}", returnCount: 10) {id, name, threadCount, postCount, threads{id, date, title}, posts{id, date, thread{id, title}}}}`)).forumProfile
     if(!profile){alertDialog("Could not retrive user profile"); return;}
 
     this.shadowRoot.getElementById("name").setAttribute("value", profile.name);

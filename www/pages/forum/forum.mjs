@@ -153,7 +153,7 @@ class Element extends HTMLElement {
             <tr>
                 <td><field-ref ref="/forum/thread/${thread.id}"/>${thread.id}</field-ref></td>
                 <td>${thread.date.replaceAll("T", " ").substring(0, 19)}</td>
-                <td>${thread.author.user ? `<field-ref ref="/setup/users/${thread.author.user.id}">${thread.author.name}</field-ref>` : thread.author.name}</td>
+                <td><field-ref ref="/forum/profile?name=${thread.author.name}">${thread.author.name}</field-ref></td>
                 <td><field-ref ref="/forum/thread/${thread.id}"/>${thread.title}</field-ref></td>
             </tr>
         `

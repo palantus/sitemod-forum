@@ -4,9 +4,9 @@ routes.push(...[
   {path: "/forum/search",           page: "/pages/forum/forum.mjs"},
   {path: "/forum/setup",            page: "/pages/forum/setup.mjs"},
   {path: "/forum/missing-users",    page: "/pages/forum/missing-users.mjs"},
-
+  {path: "/forum/profile",          page: "/pages/forum/profile.mjs"},
+  
   //Place regexp pages last, to ensure fast routing of those without:
   {regexp: /^\/forum\/thread\/(\d+)/,  page: "/pages/forum/thread.mjs"},
-  {regexp: /^\/forum\/profile\/([a-zA-Z0-9\-_@&.]+)/,  page: "/pages/forum/profile.mjs"},
   {regexp: /^\/forum\/([a-z0-9\-]+)/,  page: "/pages/forum/forum.mjs"},
 ])
