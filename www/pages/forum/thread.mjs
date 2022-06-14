@@ -133,11 +133,13 @@ class Element extends HTMLElement {
 
     this.threadId = this.getAttribute("threadid") || parseInt(/\d+/.exec(state().path)?.[0]);
     
-    fire("forum-thread-page-created", {
-      page: this,
-      container: this.shadowRoot.getElementById("container"), 
-      threadId: this.threadId
-    })
+    setTimeout(() => {
+      fire("forum-thread-page-created", {
+        page: this,
+        container: this.shadowRoot.getElementById("container"), 
+        threadId: this.threadId
+      })
+    }, 0)
   }
 
   connectedCallback() {
