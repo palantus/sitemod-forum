@@ -5,6 +5,7 @@ import "/components/field-edit.mjs"
 import "/components/field-list.mjs"
 import {on, off} from "/system/events.mjs"
 import {state, goto} from "/system/core.mjs"
+import {alertDialog} from "/components/dialog.mjs"
 
 const template = document.createElement('template');
 template.innerHTML = `
@@ -51,7 +52,6 @@ class Element extends HTMLElement {
     this.attachShadow({ mode: 'open' });
     this.shadowRoot.appendChild(template.content.cloneNode(true));
 
-    this.userName = state().query.name
     this.refreshData = this.refreshData.bind(this)
 
     this.shadowRoot.getElementById("view-all-threads").addEventListener("click", () => goto(`/forum?filter=authoruser%3A${this.userId}`))
@@ -59,35 +59,36 @@ class Element extends HTMLElement {
   }
 
   async refreshData(){
-    
+    this.userName = state().query.name
     let profile = (await api.query(`{forumProfile(name: "${this.userName}", returnCount: 10) {id, name, threadCount, postCount, threads{id, date, title}, posts{id, date, thread{id, title}}}}`)).forumProfile
-    if(!profile){alertDialog("Could not retrive user profile"); return;}
 
-    this.shadowRoot.getElementById("name").setAttribute("value", profile.name);
-    this.shadowRoot.getElementById("threadCount").setAttribute("value", profile.threadCount);
-    this.shadowRoot.getElementById("postCount").setAttribute("value", profile.postCount);
+    this.shadowRoot.getElementById("name").setAttribute("value", profile?.name||this.userName);
+    this.shadowRoot.getElementById("threadCount").setAttribute("value", profile?.threadCount||0);
+    this.shadowRoot.getElementById("postCount").setAttribute("value", profile?.postCount||0);
 
-    this.shadowRoot.getElementById("lastthreads").innerHTML = profile.threads.map(t => `
+    this.shadowRoot.getElementById("lastthreads").innerHTML = profile?.threads.map(t => `
         <tr>
           <td>${t.date.substring(0, 19).replace("T", ' ')}</td>
           <td><field-ref ref="/forum/thread/${t.id}">${t.id}: ${t.title}</field-ref></td>
         </tr>
-      `).join("")
+      `).join("")||""
 
-    this.shadowRoot.getElementById("lastposts").innerHTML = profile.posts.map(p => `
+    this.shadowRoot.getElementById("lastposts").innerHTML = profile?.posts.map(p => `
         <tr>
           <td>${p.date.substring(0, 19).replace("T", ' ')}</td>
           <td><field-ref ref="/forum/thread/${p.thread.id}">${p.thread.id}: ${p.thread.title}</field-ref></td>
         </tr>
-      `).join("")
+      `).join("")||""
   }
 
   connectedCallback() {
     on("changed-page", elementName, this.refreshData)
+    on("changed-page-query", elementName, this.refreshData)
   }
 
   disconnectedCallback() {
     off("changed-page", elementName)
+    off("changed-page-query", elementName)
   }
 }
 
