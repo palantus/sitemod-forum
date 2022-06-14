@@ -39,7 +39,7 @@ export async function sendMailsNewPosts(thread, post){
 
   for(let user of query.tag("user").relatedTo(query.prop("emailMeOnForumUpdates", true)).all){
     if(!user.email) continue;
-    if(user.id == thread.related.owner?.id) continue; // No need to notify author
+    if(user.id == post.related.owner?.id) continue; // No need to notify author
     if(!thread.rels.subscribee?.find(u => u.id == user.id)) continue; // Not subscribed to thread
     try{
       await new MailSender().send({
@@ -48,8 +48,13 @@ export async function sendMailsNewPosts(thread, post){
         body: `
           <div>
             <h3>Hello ${user.name}</h3>
-            <p>A new reply by ${post.author.name} has been posted to the following thread:</p>
-            <a href="${global.sitecore.siteURL}/forum/thread/${thread.id}">${thread.title}</a>
+            <div>
+              <p>A new reply by ${post.author.name} has been posted to the following thread:</p>
+              <a href="${global.sitecore.siteURL}/forum/thread/${thread.id}">${thread.title}</a>
+            </div>
+            <br>
+            <hr>
+            <p style="font-size: 10pt;">If you do not want to receive these types of emails, you can unsubscribe <a href="${global.sitecore.siteURL}/profile">here</a></p>
           </div>
         `,
         bodyType: "html"
