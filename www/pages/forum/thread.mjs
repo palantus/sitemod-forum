@@ -245,8 +245,11 @@ class Element extends HTMLElement {
   }
 
   toggleReplyEditor(visible){
+    this.shadowRoot.getElementById("reply").classList.toggle("hidden", visible)
     let editor = this.shadowRoot.getElementById("reply-editor")
-    if(!editor){
+    if(editor){
+      editor.classList.toggle("hidden", !visible)
+    } else {
       // Don't load the editor, unless it is needed
       import("/components/richtext.mjs").then(() => {
         this.shadowRoot.getElementById("reply-editor-container").innerHTML = `<richtext-component id="reply-editor" nosave submit></richtext-component>`
@@ -255,11 +258,7 @@ class Element extends HTMLElement {
         editor.addEventListener("submit", ({detail: {text}}) => this.postReply(text))
         editor.focus()
       })
-    } else {
-      this.shadowRoot.getElementById("reply-editor").classList.toggle("hidden", !visible)
     }
-
-    this.shadowRoot.getElementById("reply").classList.toggle("hidden", visible)
   }
 
   async deleteClicked(){
