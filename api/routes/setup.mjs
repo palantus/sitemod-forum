@@ -24,6 +24,8 @@ export default (app) => {
     if(req.body.legacyForumPassword !== undefined) setup.legacyForumPassword = req.body.legacyForumPassword;
     */
 
+    if(typeof req.body.maxFileSizeMB === "number") setup.maxFileSizeMB = req.body.maxFileSizeMB;
+
     res.json(true);
   });
 };

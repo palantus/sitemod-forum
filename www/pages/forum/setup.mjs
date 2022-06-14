@@ -23,7 +23,7 @@ template.innerHTML = `
       width: 350px;
     }
     field-list{
-      width: 600px;
+      width: 250px;
     }
   </style>  
 
@@ -34,7 +34,8 @@ template.innerHTML = `
   <div id="container">
 
     <h1>Forum setup</h1>
-    <field-list labels-pct="20">
+    <field-list labels-pct="60">
+      <field-edit type="number" label="Max file size (MB)" id="maxFileSizeMB" title="Note that this limit is only enforced on the client, as the files mod should determine max upload size for a given user. As long as you can upload it to files, you can technically attach it to a thread."></field-edit>
     </field-list>
   </div>
 `;
@@ -56,6 +57,8 @@ class Element extends HTMLElement {
   async refreshData(){
 
     let setup = await api.get("forum/setup")
+
+    this.shadowRoot.getElementById("maxFileSizeMB").setAttribute("value", setup.maxFileSizeMB||0)
 
     this.shadowRoot.querySelectorAll("field-edit:not([disabled])").forEach(e => e.setAttribute("patch", `forum/setup`));
   }

@@ -11,6 +11,7 @@ export default class Setup extends Entity{
 
   toObj(){
     return {
+      maxFileSizeMB: this.maxFileSizeMB
     }
   }
 }

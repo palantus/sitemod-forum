@@ -154,10 +154,13 @@ class Element extends HTMLElement {
 
     let threadId = this.threadId;
 
-    let {forumThread: thread} = await api.query(`{
+    let {forumThread: thread, forumClientSetup: setup} = await api.query(`{
       forumThread(id: ${threadId}){
         id, title, author{name, user{id}}, date, isSubscribed
         posts{id, author{name, user{id}}, date, edited, body, bodyHTML}
+      }
+      forumClientSetup{
+        maxFileSizeMB
       }
     }`)
 
@@ -171,6 +174,7 @@ class Element extends HTMLElement {
     let user = await getUser()
 
     this.thread = thread;
+    this.setup = setup;
     this.shadowRoot.getElementById("posts").innerHTML = thread.posts.sort((a, b) => a.date < b.date ? -1 : 1)
                                                                     .map(p => `
                   <div class="post" data-postId="${p.id}">
@@ -323,9 +327,13 @@ class Element extends HTMLElement {
           }
           reject();
         },
-        validate: (val) => 
-            /*!val.tag && !folder ? "Please fill out tag"
-          : */true,
+        validate: (val) => {
+          let tooLargeFiles = Array.from(dialog.querySelector("input[type=file]").files).filter(f => f.size > this.setup.maxFileSizeMB * 1000000).map(f => f.name)
+          if(tooLargeFiles.length > 0){
+            return `The following files exceed size limit of ${this.setup.maxFileSizeMB} MB: <br> - ${tooLargeFiles.join("<br> - ")}`
+          }
+          return true
+        },  
         values: () => {return {
           accessAll: dialog.querySelector("#file-access-all").checked,
         }},

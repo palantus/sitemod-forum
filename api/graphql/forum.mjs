@@ -17,6 +17,7 @@ import Forum from "../../models/forum.mjs"
 import { ifPermission, ifPermissionThrow } from "../../../../services/auth.mjs"
 import User from "../../../../models/user.mjs"
 import ForumPost from "../../models/post.mjs"
+import Setup from "../../models/setup.mjs"
 
 export const ForumProfileType = new GraphQLObjectType({
   name: 'ForumProfileType',
@@ -94,6 +95,14 @@ export const ForumType = new GraphQLObjectType({
   })
 })
 
+export const ForumClientSetupType = new GraphQLObjectType({
+  name: 'ForumClientSetupType',
+  description: 'This represents forum client setup',
+  fields: () => ({
+    maxFileSizeMB: { type: GraphQLNonNull(GraphQLFloat) },
+  })
+})
+
 export const ForumThreadResultType = new GraphQLObjectType({
   name: 'ForumThreadResultType',
   fields: {
@@ -125,6 +134,13 @@ export default {
       type: GraphQLList(ForumType),
       description: "List forums",
       resolve: (parent, args, context) => ifPermissionThrow(context, "forum.read", Forum.all())
+    }
+    fields.forumClientSetup = {
+      type: GraphQLNonNull(ForumClientSetupType),
+      description: "Forum client setup",
+      resolve: (parent, args, context) => ifPermissionThrow(context, "forum.read", {
+        maxFileSizeMB: Setup.lookup().maxFileSizeMB
+      })
     }
     fields.forumProfile = {
       type: ForumProfileType,
