@@ -50,8 +50,6 @@ class Element extends HTMLElement {
     this.refreshData = this.refreshData.bind(this); //Make sure "this" in that method refers to this
     
     this.shadowRoot.getElementById("map-users-btn").addEventListener("click", () => goto("/forum/missing-users"))
-
-    this.refreshData();
   }
 
   async refreshData(){
