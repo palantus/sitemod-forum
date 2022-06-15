@@ -2,6 +2,7 @@ import Entity, { query } from "entitystorage"
 import Role from "../../models/role.mjs"
 import DataType from "../../models/datatype.mjs"
 import Forum from "./models/forum.mjs"
+import Setup from "./models/setup.mjs"
 
 export default async () => {
   // init
@@ -15,6 +16,8 @@ export default async () => {
   query.tag("forum").all.forEach(f => {
     if(!f.title) f.title = f.name;
   })
+
+  Setup.ensureDefaults()
 
   return {
   }

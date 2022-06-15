@@ -9,6 +9,10 @@ export default class Setup extends Entity{
     return Setup.find("tag:forumsetup") || new Setup()
   }
 
+  ensureDefaults(){
+    if(isNaN(this.maxFileSizeMB)) this.maxFileSizeMB = 50;
+  }
+
   toObj(){
     return {
       maxFileSizeMB: this.maxFileSizeMB
