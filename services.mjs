@@ -12,11 +12,6 @@ export default async () => {
   DataType.lookupOrCreate("forum", {title: "Forum", permission: "forum.read", api: "forum/forum", nameField: "title", uiPath: "forum"})
           .init({typeModel: Forum})
 
-  //Upgrade jobs
-  query.tag("forum").all.forEach(f => {
-    if(!f.title) f.title = f.name;
-  })
-
   Setup.lookup().ensureDefaults();
 
   return {
