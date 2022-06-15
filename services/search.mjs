@@ -67,9 +67,9 @@ class Service {
       let res;
 
       if (paginationArgs.reverse === true)
-        res = allResults.sort((a, b) => a.timestamp <= b.timestamp ? 1 : -1)
+        res = allResults.sort((a, b) => a.date <= b.date ? 1 : -1)
       else
-        res = allResults.sort((a, b) => a.timestamp <= b.timestamp ? -1 : 1)
+        res = allResults.sort((a, b) => a.date >= b.date ? -1 : 1)
 
       res = paginate(res, paginationArgs, "id")
       return { nodes: res, pageInfo: { totalCount: allResults.length } }

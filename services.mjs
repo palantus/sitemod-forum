@@ -1,4 +1,4 @@
-import Entity, { query } from "entitystorage"
+import { query } from "entitystorage"
 import Role from "../../models/role.mjs"
 import DataType from "../../models/datatype.mjs"
 import Forum from "./models/forum.mjs"
