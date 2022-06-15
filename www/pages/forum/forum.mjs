@@ -43,6 +43,7 @@ template.innerHTML = `
 
   <action-bar>
     <action-bar-item id="new-btn">New thread</action-bar-item>
+    <action-bar-item id="move-btn">Move all thread</action-bar-item>
   </action-bar>
 
   <div id="container">
