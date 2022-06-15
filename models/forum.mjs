@@ -3,6 +3,12 @@ import ForumThread from "./thread.mjs"
 
 export default class Forum extends Entity {
 
+  initNew(id, title){
+    this.id = id
+    this.title = title
+    this.tag("forum")
+  }
+
   static lookup(id){
     if(!id) return null
     return query.type(Forum).tag("forum").prop("id", id).first
@@ -28,8 +34,7 @@ export default class Forum extends Entity {
   toObj(){
     return {
       id: this.id,
-      name: this.name,
-      language: this.language,
+      title: this.title
     }
   }
 }

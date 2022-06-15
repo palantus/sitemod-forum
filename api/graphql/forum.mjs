@@ -86,11 +86,10 @@ export const ForumThreadType = new GraphQLObjectType({
 
 export const ForumType = new GraphQLObjectType({
   name: 'Forum',
-  description: 'This represents a forum post',
+  description: 'This represents a forum',
   fields: () => ({
     id: { type: GraphQLNonNull(GraphQLString) },
-    name: { type: GraphQLNonNull(GraphQLString) },
-    language: { type: GraphQLNonNull(GraphQLString) },
+    title: { type: GraphQLNonNull(GraphQLString) },
     threadCount: { type: GraphQLNonNull(GraphQLInt), resolve: f => f.rels.thread?.length || 0 }
   })
 })

@@ -8,6 +8,7 @@ import "/components/field-edit.mjs"
 import "/components/action-bar.mjs"
 import "/components/action-bar-item.mjs"
 import "/components/dropdown-menu.mjs"
+import {showDialog, confirmDialog} from "/components/dialog.mjs"
 
 const template = document.createElement('template');
 template.innerHTML = `
@@ -20,6 +21,7 @@ template.innerHTML = `
     table thead th:nth-child(2){width: 90px}
     
     .hidden{display: none;}
+    .forum-action-buttons{margin-top: 10px;}
   </style>  
 
   <action-bar>
@@ -42,6 +44,11 @@ template.innerHTML = `
         </tbody>
     </table>
   </div>
+
+  <dialog-component title="New forum" id="new-dialog">
+    <field-component label="Title"><input id="new-title"></input></field-component>
+    <field-component label="Id"><input id="new-id"></input></field-component>
+  </dialog-component>
 `;
 
 class Element extends HTMLElement {
@@ -52,24 +59,40 @@ class Element extends HTMLElement {
     this.shadowRoot.appendChild(template.content.cloneNode(true));
    
     this.refreshData = this.refreshData.bind(this)
+    this.newForum = this.newForum.bind(this)
+    this.forumClick = this.forumClick.bind(this)
 
     this.shadowRoot.getElementById("search-btn").addEventListener("click", () => goto("/forum"))
+    this.shadowRoot.getElementById("new-btn").addEventListener("click", this.newForum)
+    this.shadowRoot.getElementById("forums").addEventListener("click", this.forumClick)
+
+    this.shadowRoot.getElementById("new-title").addEventListener("input", e => {
+      let value = (e.originalTarget||e.target)?.value
+      if(!value) return this.shadowRoot.getElementById("new-id").value = '';
+      clearTimeout(this.slugGenTimer)
+      this.slugGenTimer = setTimeout(() => {
+        api.get(`forum/tools/generate-new-id?id=${value}`).then(id => this.shadowRoot.getElementById("new-id").value = id)
+      }, 400)
+    })
   }
 
   async refreshData(){
 
     let {forums, me} = await api.query(`{
       forums{
-        id, name, language, threadCount
+        id, title, threadCount
       },
       me{id, permissions}
     }`)
 
-    this.shadowRoot.getElementById("forums").innerHTML = forums.sort((a,b) => a.name < b.name ? -1 : 1).map(f => `
-      <tr>
+    this.forums = forums
+    this.shadowRoot.getElementById("new-btn").classList.toggle("hidden", !me.permissions.includes("forum.admin"))
+
+    this.shadowRoot.getElementById("forums").innerHTML = forums.sort((a,b) => a.title < b.title ? -1 : 1).map(f => `
+      <tr data-id="${f.id}" class="forum">
         <td>
           <span class="forum-name">
-            <field-ref ref="/forum/${f.id}">${f.name}</field-ref>
+            <field-ref ref="/forum/${f.id}">${f.title}</field-ref>
           </span>
           <span>
             
@@ -82,7 +105,10 @@ class Element extends HTMLElement {
                 <h2>Options</h2>
                 <div>
                   <label>Name:</label>
-                  <field-edit type="text" field="name" patch="forum/${f.id}" value="${f.name}"></field-edit>
+                  <field-edit type="text" field="title" patch="forum/forum/${f.id}" value="${f.title}"></field-edit>
+                </div>
+                <div class="forum-action-buttons">
+                  <button class="styled delete">Delete</button>
                 </div>
               </div>
             </dropdown-menu-component>
@@ -90,6 +116,41 @@ class Element extends HTMLElement {
         </td>
       </tr>
     `).join("")
+  }
+
+  newForum(){
+    let dialog = this.shadowRoot.querySelector("#new-dialog")
+
+    showDialog(dialog, {
+      show: () => this.shadowRoot.querySelector("#new-title").focus(),
+      ok: async (val) => {
+        await api.post(`forum/forum`, val)
+        this.refreshData()
+      },
+      validate: async (val) => 
+          !val.title ? "Please fill out title"
+        : !val.id ? "Please fill out id"
+        : await api.get(`forum/forum/${val.id}/exists`) ? "The forum already exists"
+        : true,
+      values: () => {return {
+        title: this.shadowRoot.getElementById("new-title").value,
+        id: this.shadowRoot.getElementById("new-id").value
+      }},
+      close: () => {
+        this.shadowRoot.querySelectorAll("field-component input").forEach(e => e.value = '')
+      }
+    })
+  }
+
+  forumClick(e){
+    if(e.target.tagName != "BUTTON") return;
+    let id = e.target.closest("tr.forum")?.getAttribute("data-id")
+    if(!id) return;
+    if(e.target.classList.contains("delete")){
+      confirmDialog(`Are you sure that you want to delete the forum titled "${this.forums.find(f => f.id == id).title}"?`)
+        .then(answer => answer ? api.del(`forum/forum/${id}`)
+                                    .then(this.refreshData) : null)
+    }
   }
 
   connectedCallback() {

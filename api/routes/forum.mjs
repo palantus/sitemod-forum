@@ -16,6 +16,17 @@ export default (app) => {
   const route = Router();
   app.use("/forum", noGuest, route)
 
+  route.get("/tools/generate-new-id", (req, res, next) => {
+    let originalNewId = Forum.createId(req.query.id)
+    if(!originalNewId) throw "Id not provided"
+    let newId = originalNewId
+    let i = 1;
+    while(Forum.lookup(newId)){
+      newId = `${originalNewId}-${++i}`
+    }
+    res.json(newId)
+  })
+
   route.get('/thread/:id/exists', function (req, res, next) {
     if(!validateAccess(req, res, {permission: "forum.read"})) return;
     res.json(!!ForumThread.lookup(req.params.id))
@@ -35,7 +46,7 @@ export default (app) => {
     res.json(query.tag("forumupdatelogentry").all.map(e => e.props));
   });
 
-  route.post('/:id', noGuest, function (req, res, next) {
+  route.post('/forum/:id/threads', noGuest, function (req, res, next) {
     if(!validateAccess(req, res, {permission: "forum.thread.create"})) return;
     let forum = Forum.lookup(req.params.id)
     if(!forum) throw "Unknown forum"
@@ -166,13 +177,47 @@ export default (app) => {
     res.json({success: true})
   });
 
-  route.patch('/:id', noGuest, function (req, res, next) {
+  route.patch('/forum/:id', noGuest, function (req, res, next) {
     if(!validateAccess(req, res, {permission: "forum.admin"})) return;
     let forum = Forum.lookup(req.params.id)
     if(!forum) throw "Unknown forum"
-    if(!req.body.name || typeof req.body.name !== "string") throw "Invalid name"
-    forum.name = req.body.name
+    if(!req.body.title || typeof req.body.title !== "string") throw "Invalid name"
+    forum.title = req.body.title
     res.json({success: true})
   });
 
+  route.post('/forum', noGuest, function (req, res, next) {
+    if(!validateAccess(req, res, {permission: "forum.admin"})) return;
+    let id = req.body.id
+    if(!id || typeof id !== "string") throw "invalid id";
+    if(!req.body.title || typeof req.body.title !== "string") throw "invalid title";
+    let forum = Forum.lookup(id)
+    if(forum) throw "Forum already exists"
+    forum = new Forum(id, req.body.title)
+    res.json(forum.toObj())
+  });
+
+  route.get('/forum/:id', noGuest, function (req, res, next) {
+    if(!validateAccess(req, res, {permission: "forum.read"})) return;
+    if(!req.params.id || typeof req.params.id !== "string") throw "invalid id";
+    let forum = Forum.lookup(req.params.id)
+    if(!forum) return res.sendStatus(404);
+    res.json(forum.toObj())
+  });
+
+  route.delete('/forum/:id', noGuest, function (req, res, next) {
+    if(!validateAccess(req, res, {permission: "forum.read"})) return;
+    if(!req.params.id || typeof req.params.id !== "string") throw "invalid id";
+    let forum = Forum.lookup(req.params.id)
+    if(!forum) return res.sendStatus(404);
+    if(forum.related.thread) throw "You cannot delete forums with threads in them"
+    forum.delete()
+    res.json({success: true})
+  });
+
+  route.get('/forum/:id/exists', noGuest, function (req, res, next) {
+    if(!validateAccess(req, res, {permission: "forum.read"})) return;
+    if(!req.params.id || typeof req.params.id !== "string") throw "invalid id";
+    res.json(!!Forum.lookup(req.params.id))
+  });
 };

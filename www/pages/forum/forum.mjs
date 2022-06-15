@@ -174,7 +174,7 @@ class Element extends HTMLElement {
     showDialog(dialog, {
       show: () => this.shadowRoot.querySelector("#new-title").focus(),
       ok: async (val) => {
-        let newThread = await api.post(`forum/${this.forumId}`, val)
+        let newThread = await api.post(`forum/forum/${this.forumId}/threads`, val)
         goto(`/forum/thread/${newThread.id}`)
       },
       validate: (val) => 
