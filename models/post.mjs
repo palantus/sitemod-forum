@@ -6,9 +6,9 @@ import ForumThread from "./thread.mjs"
 
 export default class ForumPost extends Entity {
 
-  initNew(){
-    this.id = nextNum("forumpost")
-    this.date = getTimestamp()
+  initNew({id, date} = {}){
+    this.id = id || nextNum("forumpost")
+    this.date = date || getTimestamp()
     this.tag("forumpost")
   }
 

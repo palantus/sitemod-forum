@@ -7,9 +7,9 @@ import File from "../../files/models/file.mjs"
 
 export default class ForumThread extends Entity {
 
-  initNew(){
-    this.id = nextNum("forumthread")
-    this.date = getTimestamp()
+  initNew({id, date} = {}){
+    this.id = id || nextNum("forumthread")
+    this.date = date || getTimestamp()
     this.tag("forumthread")
   }
 
