@@ -72,7 +72,8 @@ export const ForumType = new GraphQLObjectType({
   fields: () => ({
     id: { type: GraphQLNonNull(GraphQLString) },
     title: { type: GraphQLNonNull(GraphQLString) },
-    threadCount: { type: GraphQLNonNull(GraphQLInt), resolve: f => f.rels.thread?.length || 0 }
+    threadCount: { type: GraphQLNonNull(GraphQLInt), resolve: f => f.rels.thread?.length || 0 },
+    url: { type: GraphQLString },
   })
 })
 
