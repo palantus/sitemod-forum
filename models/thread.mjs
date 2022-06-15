@@ -1,6 +1,7 @@
 import Entity, { query, nextNum } from "entitystorage"
 import { getTimestamp } from "../../../tools/date.mjs"
 import ForumPost from "./post.mjs"
+import Forum from "./forum.mjs"
 import User from "../../../models/user.mjs"
 import File from "../../files/models/file.mjs"
 
@@ -40,6 +41,10 @@ export default class ForumThread extends Entity {
 
   get files() {
     return (this.rels.file||[]).map(p => File.from(p))
+  }
+
+  get forum() {
+    return Forum.from(this.relsrev.thread?.find(f => f.tags.includes("forum")))
   }
 
   delete(){

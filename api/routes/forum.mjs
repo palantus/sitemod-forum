@@ -72,6 +72,15 @@ export default (app) => {
       if(req.body.subscribe) thread.subscribe(res.locals.user)
       else thread.unsubscribe(res.locals.user)
     }
+
+    if(req.body.forumId && typeof req.body.forumId === "string"){
+      if(!validateAccess(req, res, {permission: "forum.admin"})) return;
+      let forum = Forum.lookup(req.body.forumId);
+      if(!forum) throw "Invalid destination forum";
+      if(forum._id == thread.forum._id) throw "The thread is already in this forum"
+      thread.forum.removeRel(thread, "thread")
+      forum.rel(thread, "thread")
+    }
     res.json({success: true})
   });
 
@@ -219,5 +228,10 @@ export default (app) => {
     if(!validateAccess(req, res, {permission: "forum.read"})) return;
     if(!req.params.id || typeof req.params.id !== "string") throw "invalid id";
     res.json(!!Forum.lookup(req.params.id))
+  });
+
+  route.get('/forum', noGuest, function (req, res, next) {
+    if(!validateAccess(req, res, {permission: "forum.read"})) return;
+    res.json(Forum.all().map(f => f.toObj()))
   });
 };

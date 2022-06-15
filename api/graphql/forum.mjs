@@ -66,6 +66,16 @@ export const ForumPostType = new GraphQLObjectType({
   })
 })
 
+export const ForumType = new GraphQLObjectType({
+  name: 'Forum',
+  description: 'This represents a forum',
+  fields: () => ({
+    id: { type: GraphQLNonNull(GraphQLString) },
+    title: { type: GraphQLNonNull(GraphQLString) },
+    threadCount: { type: GraphQLNonNull(GraphQLInt), resolve: f => f.rels.thread?.length || 0 }
+  })
+})
+
 export let forumThreadFields = {
   id: { type: GraphQLNonNull(GraphQLInt) },
   date: { type: GraphQLNonNull(GraphQLString) },
@@ -75,23 +85,14 @@ export let forumThreadFields = {
   postCount: { type: GraphQLInt, resolve: t => t.relsrev?.thread?.length || 0 },
   posts: { type: GraphQLList(ForumPostType) },
   files: { type: GraphQLList(ForumFileType) },
-  isSubscribed: {type: GraphQLNonNull(GraphQLBoolean), resolve: (parent, args, context) => !!parent.rels.subscribee?.find(u => u.id == context.user.id)}
+  isSubscribed: {type: GraphQLNonNull(GraphQLBoolean), resolve: (parent, args, context) => !!parent.rels.subscribee?.find(u => u.id == context.user.id)},
+  forum: {type: GraphQLNonNull(ForumType)}
 }
 
 export const ForumThreadType = new GraphQLObjectType({
   name: 'ForumThread',
   description: 'This represents a forum thread',
   fields: () => forumThreadFields
-})
-
-export const ForumType = new GraphQLObjectType({
-  name: 'Forum',
-  description: 'This represents a forum',
-  fields: () => ({
-    id: { type: GraphQLNonNull(GraphQLString) },
-    title: { type: GraphQLNonNull(GraphQLString) },
-    threadCount: { type: GraphQLNonNull(GraphQLInt), resolve: f => f.rels.thread?.length || 0 }
-  })
 })
 
 export const ForumClientSetupType = new GraphQLObjectType({

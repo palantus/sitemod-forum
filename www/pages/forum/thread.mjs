@@ -8,6 +8,7 @@ import "/components/action-bar.mjs"
 import "/components/action-bar-item.mjs"
 import "/components/dropdown-menu.mjs"
 import "/components/list-inline.mjs"
+import "/components/field-edit.mjs"
 import { confirmDialog, alertDialog, promptDialog, showDialog } from "../../components/dialog.mjs"
 
 const template = document.createElement('template');
@@ -86,6 +87,7 @@ template.innerHTML = `
 
   <action-bar class="hidden">
     <action-bar-item id="delete" title="Only possible for owner of thread and admins">Delete thread</action-bar-item>
+    <action-bar-item id="move-thread-btn" title="Only possible for admins">Move thread</action-bar-item>
   </action-bar>
 
   <div id="container">
@@ -106,6 +108,12 @@ template.innerHTML = `
     <label for="file-access-all">All forum users</label>
     <input id="file-access-all" type="checkbox"></input>
   </dialog-component>
+
+  <dialog-component title="Move thread" id="move-dialog">
+    <field-component label="Destination forum">
+      <field-edit id="move-dest-id" type="select" lookup="forum"></field-edit>
+    </field-component>
+  </dialog-component>
 `;
 
 class Element extends HTMLElement {
@@ -124,12 +132,14 @@ class Element extends HTMLElement {
     this.titleEditClicked = this.titleEditClicked.bind(this)
     this.addFile = this.addFile.bind(this)
     this.subscribeClicked = this.subscribeClicked.bind(this)
+    this.moveThread = this.moveThread.bind(this)
 
     this.shadowRoot.getElementById("reply").addEventListener("click", this.replyClicked)
     this.shadowRoot.getElementById("delete").addEventListener("click", this.deleteClicked)
     this.shadowRoot.getElementById("posts").addEventListener("click", this.postsClicked)
     this.shadowRoot.getElementById("edit-title").addEventListener("click", this.titleEditClicked)
     this.shadowRoot.getElementById("subscribe").addEventListener("click", this.subscribeClicked);
+    this.shadowRoot.getElementById("move-thread-btn").addEventListener("click", this.moveThread);
 
     this.threadId = this.getAttribute("threadid") || parseInt(/\d+/.exec(state().path)?.[0]);
     
@@ -224,6 +234,7 @@ class Element extends HTMLElement {
     })
 
     this.shadowRoot.getElementById("delete").classList.toggle("hidden", (user.id != thread.author.user?.id && !user.permissions.includes("forum.admin")) || !user.permissions.includes("forum.thread.delete"))
+    this.shadowRoot.getElementById("move-thread-btn").classList.toggle("hidden", !user.permissions.includes("forum.admin"))
     this.shadowRoot.getElementById("edit-title").classList.toggle("hidden", (user.id != thread.author.user?.id && !user.permissions.includes("forum.admin")) || !user.permissions.includes("forum.thread.edit"))
     this.shadowRoot.getElementById("reply").classList.toggle("hidden", !user.permissions.includes("forum.post.create"))
 
@@ -353,6 +364,25 @@ class Element extends HTMLElement {
 
     this.shadowRoot.getElementById("subscribe").innerText = thread.isSubscribed ? "Unsubscribe" : "Subscribe"
     this.shadowRoot.getElementById("subscribe").toggleAttribute("subscribed", thread.isSubscribed)
+  }
+
+  moveThread(){
+    let dialog = this.shadowRoot.querySelector("#move-dialog")
+
+    showDialog(dialog, {
+      show: () => this.shadowRoot.getElementById("move-dest-id").focus(),
+      ok: async (val) => api.patch(`forum/thread/${this.threadId}`, {forumId: val.id}),
+      validate: async (val) => 
+          !val.id ? "Please fill out id"
+        : !(await api.get(`forum/forum/${val.id}/exists`)) ? "The forum doesn't exists"
+        : true,
+      values: () => {return {
+        id: this.shadowRoot.getElementById("move-dest-id").getValue()
+      }},
+      close: () => {
+        this.shadowRoot.querySelectorAll("field-component input").forEach(e => e.value = '')
+      }
+    })
   }
 
   static get observedAttributes() {
