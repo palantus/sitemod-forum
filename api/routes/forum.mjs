@@ -16,6 +16,11 @@ export default (app) => {
   const route = Router();
   app.use("/forum", noGuest, route)
 
+  route.get('/thread/:id/exists', function (req, res, next) {
+    if(!validateAccess(req, res, {permission: "forum.read"})) return;
+    res.json(!!ForumThread.lookup(req.params.id))
+  });
+
   route.get('/thread/:id', function (req, res, next) {
     if(!validateAccess(req, res, {permission: "forum.read"})) return;
     let thread = ForumThread.lookup(req.params.id)
