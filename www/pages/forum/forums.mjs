@@ -13,12 +13,21 @@ import {showDialog, confirmDialog} from "/components/dialog.mjs"
 const template = document.createElement('template');
 template.innerHTML = `
   <link rel='stylesheet' href='/css/global.css'>
+  <link rel='stylesheet' href='/css/searchresults.css'>
   <style>
     #container{
       padding: 10px;
     }
-    table thead th:nth-child(1){width: 150px}
+    table thead th:nth-child(1){width: 200px}
     table thead th:nth-child(2){width: 90px}
+
+    table{
+      width: 100%;
+    }
+    table thead tr{
+      border-bottom: 1px solid var(--contrast-color-muted);
+    }
+    table tbody td{padding-top: 5px;padding-bottom:5px;}
     
     .hidden{display: none;}
     .forum-action-buttons{margin-top: 10px;}
@@ -32,7 +41,7 @@ template.innerHTML = `
   <div id="container">
     <h1>Forums</h1>
 
-    <table class="datalist">
+    <table>
         <thead>
             <tr>
               <th>Name</th>

@@ -175,6 +175,7 @@ class Element extends HTMLElement {
       show: () => this.shadowRoot.querySelector("#new-title").focus(),
       ok: async (val) => {
         let newThread = await api.post(`forum/forum/${this.forumId}/threads`, val)
+        await this.clearAndRefreshResults();
         goto(`/forum/thread/${newThread.id}`)
       },
       validate: (val) => 

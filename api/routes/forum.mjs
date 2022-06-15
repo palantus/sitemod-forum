@@ -206,7 +206,7 @@ export default (app) => {
   });
 
   route.delete('/forum/:id', noGuest, function (req, res, next) {
-    if(!validateAccess(req, res, {permission: "forum.read"})) return;
+    if(!validateAccess(req, res, {permission: "forum.admin"})) return;
     if(!req.params.id || typeof req.params.id !== "string") throw "invalid id";
     let forum = Forum.lookup(req.params.id)
     if(!forum) return res.sendStatus(404);
