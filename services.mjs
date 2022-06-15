@@ -17,7 +17,7 @@ export default async () => {
     if(!f.title) f.title = f.name;
   })
 
-  Setup.ensureDefaults()
+  Setup.lookup().ensureDefaults();
 
   return {
   }

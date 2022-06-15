@@ -9,7 +9,7 @@ export default class Setup extends Entity{
     return Setup.find("tag:forumsetup") || new Setup()
   }
 
-  static ensureDefaults(){
+  ensureDefaults(){
     if(isNaN(this.maxFileSizeMB)) this.maxFileSizeMB = 50;
   }
 
