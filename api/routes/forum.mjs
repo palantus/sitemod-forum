@@ -232,6 +232,6 @@ export default (app) => {
 
   route.get('/forum', noGuest, function (req, res, next) {
     if(!validateAccess(req, res, {permission: "forum.read"})) return;
-    res.json(Forum.all().map(f => f.toObj()))
+    res.json(Forum.all.map(f => f.toObj()))
   });
 };
