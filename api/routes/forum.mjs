@@ -190,8 +190,12 @@ export default (app) => {
     if(!validateAccess(req, res, {permission: "forum.admin"})) return;
     let forum = Forum.lookup(req.params.id)
     if(!forum) throw "Unknown forum"
-    if(!req.body.title || typeof req.body.title !== "string") throw "Invalid name"
-    forum.title = req.body.title
+    if(req.body.title && typeof req.body.title === "string"){
+      forum.title = req.body.title
+    }
+    if(req.body.url && typeof req.body.url === "string"){
+      forum.url = req.body.url
+    }
     res.json({success: true})
   });
 
