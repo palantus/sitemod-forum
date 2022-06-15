@@ -3,10 +3,11 @@ const elementName = 'forum-page'
 import api from "/system/api.mjs"
 import "/components/field-ref.mjs"
 import {pushStateQuery, state, goto} from "/system/core.mjs"
+import {getUser} from "/system/user.mjs"
 import {on, off, fire} from "/system/events.mjs"
 import {makeRowsSelectable} from "/libs/table-tools.mjs"
 import { alertDialog, showDialog } from "/components/dialog.mjs"
-import "/components/field.mjs"
+import "/components/field-edit.mjs"
 import "/components/action-bar.mjs"
 import "/components/action-bar-item.mjs"
 import "/components/data/searchhelp.mjs"
@@ -43,7 +44,8 @@ template.innerHTML = `
 
   <action-bar>
     <action-bar-item id="new-btn">New thread</action-bar-item>
-    <action-bar-item id="move-btn">Move all thread</action-bar-item>
+    <action-bar-item id="move-btn" class="hidden">Move selected</action-bar-item>
+    <action-bar-item id="select-all-btn" class="hidden">Select all</action-bar-item>
   </action-bar>
 
   <div id="container">
@@ -69,6 +71,12 @@ template.innerHTML = `
   <dialog-component title="New thread" id="new-dialog">
     <field-component label="Title"><input id="new-title"></input></field-component>
   </dialog-component>
+
+  <dialog-component title="Move thread" id="move-dialog">
+    <field-component label="Destination forum">
+      <field-edit id="move-dest-id" type="select" lookup="forum"></field-edit>
+    </field-component>
+  </dialog-component>
 `;
 
 class Element extends HTMLElement {
@@ -81,12 +89,14 @@ class Element extends HTMLElement {
     this.onScroll = this.onScroll.bind(this);
     this.newClicked = this.newClicked.bind(this);
     this.clearAndRefreshResults = this.clearAndRefreshResults.bind(this)
+    this.moveSelected = this.moveSelected.bind(this);
     
     this.shadowRoot.querySelector('input').addEventListener("change", () => {
       this.queryChanged()
       pushStateQuery(this.lastQuery ? {filter: this.lastQuery} : undefined)
     })
     this.shadowRoot.getElementById("new-btn").addEventListener("click", this.newClicked)
+    this.shadowRoot.getElementById("move-btn").addEventListener("click", this.moveSelected)
 
     this.forumId = /^\/forum\/([a-z0-9\-]+)/.exec(state().path)?.[1] || null
 
@@ -95,6 +105,14 @@ class Element extends HTMLElement {
 
     //Hide actionbar if there aren't any buttons visible
     this.shadowRoot.querySelector("action-bar").classList.toggle("hidden", !!!this.shadowRoot.querySelector("action-bar action-bar-item:not(.hidden)"))
+
+    getUser().then(user => {
+      this.shadowRoot.getElementById("move-btn").classList.toggle("hidden", !user.permissions.includes("forum.admin"));
+      this.shadowRoot.getElementById("select-all-btn").classList.toggle("hidden", !user.permissions.includes("forum.admin"));
+
+      //Hide actionbar if there aren't any buttons visible
+      this.shadowRoot.querySelector("action-bar").classList.toggle("hidden", !!!this.shadowRoot.querySelector("action-bar action-bar-item:not(.hidden)"))
+    })
 
     this.query = ""
     this.results = []
@@ -149,14 +167,13 @@ class Element extends HTMLElement {
     for(let i = Math.max(0, start); i <= Math.min(end, this.results.length -1); i++){
         let thread = this.results[i]
         let row = document.createElement("tr")
+        row.setAttribute("data-id", thread.id)
         row.classList.add("result")
         row.innerHTML = `
-            <tr>
-                <td><field-ref ref="/forum/thread/${thread.id}"/>${thread.id}</field-ref></td>
-                <td>${thread.date.replaceAll("T", " ").substring(0, 19)}</td>
-                <td><field-ref ref="/forum/profile?name=${thread.author.name}">${thread.author.name}</field-ref></td>
-                <td><field-ref ref="/forum/thread/${thread.id}"/>${thread.title}</field-ref></td>
-            </tr>
+              <td><field-ref ref="/forum/thread/${thread.id}"/>${thread.id}</field-ref></td>
+              <td>${thread.date.replaceAll("T", " ").substring(0, 19)}</td>
+              <td><field-ref ref="/forum/profile?name=${thread.author.name}">${thread.author.name}</field-ref></td>
+              <td><field-ref ref="/forum/thread/${thread.id}"/>${thread.title}</field-ref></td>
         `
         tab.appendChild(row);
     }
@@ -189,6 +206,35 @@ class Element extends HTMLElement {
         this.shadowRoot.querySelectorAll("field-component input").forEach(e => e.value = '')
       }
     })
+  }
+
+  async moveSelected(){
+    let threadIds = this.selectionTool.getSelected().map(tr => parseInt(tr.getAttribute("data-id")));
+    if(threadIds.length < 1) return alertDialog("No threads selected");
+
+    let dialog = this.shadowRoot.querySelector("#move-dialog")
+
+    showDialog(dialog, {
+      show: () => this.shadowRoot.getElementById("move-dest-id").focus(),
+      ok: async (val) => {
+        for(let threadId of threadIds){
+          await api.patch(`forum/thread/${threadId}`, {forumId: val.id})
+        }
+        this.clearAndRefreshResults()
+      },
+      validate: async (val) => 
+          !val.id ? "Please fill out id"
+        : !(await api.get(`forum/forum/${val.id}/exists`)) ? "The forum doesn't exists"
+        : true,
+      values: () => {return {
+        id: this.shadowRoot.getElementById("move-dest-id").getValue()
+      }},
+      close: () => {
+        this.shadowRoot.querySelectorAll("field-component input").forEach(e => e.value = '')
+      }
+    })
+
+
   }
 
   connectedCallback() {
