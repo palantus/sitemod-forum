@@ -237,7 +237,7 @@ class Element extends HTMLElement {
     if(threadIds.length < 1) return alertDialog("No threads selected");
 
     let dialog = this.shadowRoot.getElementById("move-dialog")
-    dialog.setAttribute("title", `Move ${threadIds.length} threads`)
+    dialog.setAttribute("title", `Move ${threadIds.length} thread${threadIds.length > 1 ? 's':''}`)
 
     showDialog(dialog, {
       show: () => this.shadowRoot.getElementById("move-dest-id").focus(),
@@ -264,7 +264,7 @@ class Element extends HTMLElement {
     let threadIds = this.selectionTool.getSelected().map(tr => parseInt(tr.getAttribute("data-id")));
     if(threadIds.length < 1) return alertDialog("No threads selected");
 
-    if(!(await confirmDialog(`Are you sure that you want to delete ${threadIds.length} threads? This cannot be undone!`))) return;
+    if(!(await confirmDialog(`Are you sure that you want to delete ${threadIds.length} thread${threadIds.length > 1 ? 's':''}? This cannot be undone!`))) return;
 
     for(let threadId of threadIds){
       await api.del(`forum/thread/${threadId}`)
