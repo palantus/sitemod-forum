@@ -4,9 +4,9 @@ import api from "/system/api.mjs"
 import "/components/field-ref.mjs"
 import {pushStateQuery, state, goto} from "/system/core.mjs"
 import {getUser} from "/system/user.mjs"
-import {on, off, fire} from "/system/events.mjs"
+import {on, off} from "/system/events.mjs"
 import {makeRowsSelectable} from "/libs/table-tools.mjs"
-import { alertDialog, showDialog } from "/components/dialog.mjs"
+import { alertDialog, showDialog, confirmDialog } from "/components/dialog.mjs"
 import "/components/field-edit.mjs"
 import "/components/action-bar.mjs"
 import "/components/action-bar-item.mjs"
@@ -19,6 +19,10 @@ template.innerHTML = `
   <style>
     #container{
         position: relative;
+    }
+    action-bar{
+      height: 28px;
+      display: block;
     }
     table{
       width: 100%;
@@ -39,13 +43,30 @@ template.innerHTML = `
       position: relative;
       top: 2px;
     }
+    #selection-tools{
+      border: 1px solid var(--contrast-color-muted);
+      border-radius: 15px;
+      padding-left: 7px;
+      padding-right: 7px;
+      margin-left: 10px;
+    }
+    #selection-tools > span{
+      border-right: 1px solid var(--contrast-color-muted);
+      padding-right: 3px;
+      color: var(--contrast-color-muted);
+    }
     .hidden{display: none;}
   </style>  
 
   <action-bar>
     <action-bar-item id="new-btn">New thread</action-bar-item>
-    <action-bar-item id="move-btn" class="hidden">Move selected</action-bar-item>
-    <action-bar-item id="select-all-btn" class="hidden">Select all</action-bar-item>
+    <div id="selection-tools" class="hidden">
+      <span>Selection: </span>
+      <action-bar-item id="select-all-btn">Select all</action-bar-item>
+      <action-bar-item id="clear-selection-btn">Clear</action-bar-item>
+      <action-bar-item id="move-btn" class="hidden">Move</action-bar-item>
+      <action-bar-item id="delete-btn" class="hidden">Delete</action-bar-item>
+    </div>
   </action-bar>
 
   <div id="container">
@@ -90,6 +111,7 @@ class Element extends HTMLElement {
     this.newClicked = this.newClicked.bind(this);
     this.clearAndRefreshResults = this.clearAndRefreshResults.bind(this)
     this.moveSelected = this.moveSelected.bind(this);
+    this.deleteSelected = this.deleteSelected.bind(this);
     
     this.shadowRoot.querySelector('input').addEventListener("change", () => {
       this.queryChanged()
@@ -97,6 +119,9 @@ class Element extends HTMLElement {
     })
     this.shadowRoot.getElementById("new-btn").addEventListener("click", this.newClicked)
     this.shadowRoot.getElementById("move-btn").addEventListener("click", this.moveSelected)
+    this.shadowRoot.getElementById("delete-btn").addEventListener("click", this.deleteSelected)
+    this.shadowRoot.getElementById("select-all-btn").addEventListener("click", () => this.selectionTool.selectAll())
+    this.shadowRoot.getElementById("clear-selection-btn").addEventListener("click", () => this.selectionTool.clear())
 
     this.forumId = /^\/forum\/([a-z0-9\-]+)/.exec(state().path)?.[1] || null
 
@@ -105,14 +130,6 @@ class Element extends HTMLElement {
 
     //Hide actionbar if there aren't any buttons visible
     this.shadowRoot.querySelector("action-bar").classList.toggle("hidden", !!!this.shadowRoot.querySelector("action-bar action-bar-item:not(.hidden)"))
-
-    getUser().then(user => {
-      this.shadowRoot.getElementById("move-btn").classList.toggle("hidden", !user.permissions.includes("forum.admin"));
-      this.shadowRoot.getElementById("select-all-btn").classList.toggle("hidden", !user.permissions.includes("forum.admin"));
-
-      //Hide actionbar if there aren't any buttons visible
-      this.shadowRoot.querySelector("action-bar").classList.toggle("hidden", !!!this.shadowRoot.querySelector("action-bar action-bar-item:not(.hidden)"))
-    })
 
     this.query = ""
     this.results = []
@@ -154,6 +171,10 @@ class Element extends HTMLElement {
     for(let i = 0; i < data.forumThreads.nodes.length; i++)
       this.results[i+start] = data.forumThreads.nodes[i]
     this.resultCount = data.forumThreads.pageInfo.totalCount
+    this.me = await getUser()
+
+    this.shadowRoot.getElementById("move-btn").classList.toggle("hidden", !this.me.permissions.includes("forum.admin"))
+    this.shadowRoot.getElementById("delete-btn").classList.toggle("hidden", !this.me.permissions.includes("forum.admin"))
   }
 
   async clearResults(){
@@ -179,7 +200,10 @@ class Element extends HTMLElement {
     }
 
     // Selectable rows
-    this.selectionTool = makeRowsSelectable(tab.parentElement)
+    this.selectionTool = makeRowsSelectable(tab.parentElement, items => {
+      this.shadowRoot.getElementById("selection-tools").classList.toggle("hidden", items.length < 1)
+      this.shadowRoot.querySelector("action-bar").classList.toggle("hidden", !!!this.shadowRoot.querySelector("action-bar > *:not(.hidden)"))
+    })
 
     // Result info
     this.shadowRoot.getElementById("resultinfo").innerText = `${this.resultCount} results`
@@ -212,7 +236,8 @@ class Element extends HTMLElement {
     let threadIds = this.selectionTool.getSelected().map(tr => parseInt(tr.getAttribute("data-id")));
     if(threadIds.length < 1) return alertDialog("No threads selected");
 
-    let dialog = this.shadowRoot.querySelector("#move-dialog")
+    let dialog = this.shadowRoot.getElementById("move-dialog")
+    dialog.setAttribute("title", `Move ${threadIds.length} threads`)
 
     showDialog(dialog, {
       show: () => this.shadowRoot.getElementById("move-dest-id").focus(),
@@ -233,8 +258,18 @@ class Element extends HTMLElement {
         this.shadowRoot.querySelectorAll("field-component input").forEach(e => e.value = '')
       }
     })
+  }
 
+  async deleteSelected(){
+    let threadIds = this.selectionTool.getSelected().map(tr => parseInt(tr.getAttribute("data-id")));
+    if(threadIds.length < 1) return alertDialog("No threads selected");
 
+    if(!(await confirmDialog(`Are you sure that you want to delete ${threadIds.length} threads? This cannot be undone!`))) return;
+
+    for(let threadId of threadIds){
+      await api.del(`forum/thread/${threadId}`)
+    }
+    this.clearAndRefreshResults()
   }
 
   connectedCallback() {
