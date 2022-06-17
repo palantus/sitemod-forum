@@ -18,12 +18,6 @@ export default (app) => {
 
     let setup = Setup.lookup();
 
-    /*
-    if(req.body.legacyForumURL !== undefined) setup.legacyForumURL = req.body.legacyForumURL;
-    if(req.body.legacyForumUsername !== undefined) setup.legacyForumUsername = req.body.legacyForumUsername;
-    if(req.body.legacyForumPassword !== undefined) setup.legacyForumPassword = req.body.legacyForumPassword;
-    */
-
     if(typeof req.body.maxFileSizeMB === "number") setup.maxFileSizeMB = req.body.maxFileSizeMB;
 
     res.json(true);

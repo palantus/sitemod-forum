@@ -69,6 +69,10 @@ export default class ForumThread extends Entity {
     return this.posts.sort((a, b) => a.date < b.date ? 1 : -1)[0]?.date || this.date
   }
 
+  get lastReply(){
+    return this.posts.sort((a, b) => a.date < b.date ? 1 : -1)[0] || null
+  }
+
   toObj(){
     let author = this.author
     return {

@@ -91,7 +91,8 @@ export const ForumThreadType = new GraphQLObjectType({
     files: { type: GraphQLList(ForumFileType) },
     isSubscribed: {type: GraphQLNonNull(GraphQLBoolean), resolve: (parent, args, context) => !!parent.rels.subscribee?.find(u => u.id == context.user.id)},
     forum: {type: GraphQLNonNull(ForumType)},
-    lastActivityDate: { type: GraphQLNonNull(GraphQLString) }
+    lastActivityDate: { type: GraphQLNonNull(GraphQLString) },
+    lastReply: { type: ForumPostType }
   })
 })
 
