@@ -108,6 +108,14 @@ export default (app) => {
     res.json(post.toObj())
   });
 
+
+  route.get('/thread/:id/posts', noGuest, function (req, res, next) {
+    if(!validateAccess(req, res, {permission: "forum.post.create"})) return;
+    let thread = ForumThread.lookup(req.params.id)
+    if(!thread) throw "Unknown thread"
+    res.json(thread.posts.map(p => p.toObj()))
+  });
+
   route.post('/thread/:id/files', noGuest, function (req, res, next) {
     if(!validateAccess(req, res, {permission: "forum.thread.attach-file"})) return;
     let thread = ForumThread.lookup(req.params.id)
