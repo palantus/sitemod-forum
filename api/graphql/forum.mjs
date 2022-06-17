@@ -77,23 +77,22 @@ export const ForumType = new GraphQLObjectType({
   })
 })
 
-export let forumThreadFields = {
-  id: { type: GraphQLNonNull(GraphQLInt) },
-  date: { type: GraphQLNonNull(GraphQLString) },
-  author: { type: GraphQLNonNull(ForumAuthorType) },
-  title: { type: GraphQLNonNull(GraphQLString) },
-  url: { type: GraphQLString },
-  postCount: { type: GraphQLInt, resolve: t => t.relsrev?.thread?.length || 0 },
-  posts: { type: GraphQLList(ForumPostType) },
-  files: { type: GraphQLList(ForumFileType) },
-  isSubscribed: {type: GraphQLNonNull(GraphQLBoolean), resolve: (parent, args, context) => !!parent.rels.subscribee?.find(u => u.id == context.user.id)},
-  forum: {type: GraphQLNonNull(ForumType)}
-}
-
 export const ForumThreadType = new GraphQLObjectType({
   name: 'ForumThread',
   description: 'This represents a forum thread',
-  fields: () => forumThreadFields
+  fields: () => ({
+    id: { type: GraphQLNonNull(GraphQLInt) },
+    date: { type: GraphQLNonNull(GraphQLString) },
+    author: { type: GraphQLNonNull(ForumAuthorType) },
+    title: { type: GraphQLNonNull(GraphQLString) },
+    url: { type: GraphQLString },
+    postCount: { type: GraphQLInt, resolve: t => t.rels.post?.length || 0 },
+    posts: { type: GraphQLList(ForumPostType) },
+    files: { type: GraphQLList(ForumFileType) },
+    isSubscribed: {type: GraphQLNonNull(GraphQLBoolean), resolve: (parent, args, context) => !!parent.rels.subscribee?.find(u => u.id == context.user.id)},
+    forum: {type: GraphQLNonNull(ForumType)},
+    lastActivityDate: { type: GraphQLNonNull(GraphQLString) }
+  })
 })
 
 export const ForumClientSetupType = new GraphQLObjectType({

@@ -65,6 +65,10 @@ export default class ForumThread extends Entity {
     }
   }
 
+  get lastActivityDate(){
+    return this.posts.sort((a, b) => a.date < b.date ? 1 : -1)[0]?.date || this.date
+  }
+
   toObj(){
     let author = this.author
     return {
@@ -79,7 +83,7 @@ export default class ForumThread extends Entity {
       },
       active: !this.tags.includes("closed"),
       url: this.url,
-      lastActivityDate: this.relsrev?.thread?.sort((a, b) => a.date < b.date ? 1 : -1)[0]?.date || this.date
+      lastActivityDate: this.lastActivityDate
     }
   }
 }
