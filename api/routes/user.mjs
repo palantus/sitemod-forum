@@ -14,6 +14,7 @@ export default (app) => {
     let u = service(res.locals).me()
     if (!u) throw "No user"
 
+    if(typeof req.body.notifyForumUpdates === "boolean") u.setup.notifyForumUpdates = !!req.body.notifyForumUpdates;
     if(typeof req.body.emailMeOnForumUpdates === "boolean") u.setup.emailMeOnForumUpdates = !!req.body.emailMeOnForumUpdates;
     if(typeof req.body.notifyAllNewThreads === "boolean") u.setup.notifyAllNewThreads = !!req.body.notifyAllNewThreads;
     res.json({success: true})

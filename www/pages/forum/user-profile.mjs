@@ -24,8 +24,9 @@ template.innerHTML = `
   <div id="container">
     <h2>Forum</h2>
     <field-list labels-pct="70">
-      <field-edit label="E-mail me with updates" title="Will send you an email every time something happens (e.g. a new post on a subscribed thread)" type="checkbox" id="emailMeOnForumUpdates"></field-edit>
-      <field-edit label="Notify me about new threads" title="Receive an e-mail notification every time a thread is posted" type="checkbox" id="notifyAllNewThreads"></field-edit>
+      <field-edit label="Notify with updates" title="Will send you a notification every time something happens on a subscribed thread" type="checkbox" id="notifyForumUpdates"></field-edit>
+      <field-edit label="Notify with new threads" title="Receive a notification every time a new thread is posted" type="checkbox" id="notifyAllNewThreads"></field-edit>
+      <field-edit label="E-mail notifications" title="Will send you an email every time you get a forum notification according to above settings" type="checkbox" id="emailMeOnForumUpdates"></field-edit>
     </field-list>
   </div>
 `;
@@ -47,6 +48,7 @@ class Element extends HTMLElement {
   async refreshData(){
     let setup = await api.get("me/setup")
     
+    this.shadowRoot.getElementById("notifyForumUpdates").setAttribute("value", setup.notifyForumUpdates !== false)
     this.shadowRoot.getElementById("emailMeOnForumUpdates").setAttribute("value", !!setup.emailMeOnForumUpdates)
     this.shadowRoot.getElementById("notifyAllNewThreads").setAttribute("value", !!setup.notifyAllNewThreads)
 

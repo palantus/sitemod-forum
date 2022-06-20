@@ -178,6 +178,7 @@ class Element extends HTMLElement {
   }
 
   async clearResults(){
+    this.selectionTool?.clear()
     let tab = this.shadowRoot.querySelector('table tbody')
     tab.innerHTML = "";
     this.results = []
