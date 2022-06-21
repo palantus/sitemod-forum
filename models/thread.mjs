@@ -4,6 +4,7 @@ import ForumPost from "./post.mjs"
 import Forum from "./forum.mjs"
 import User from "../../../models/user.mjs"
 import File from "../../files/models/file.mjs"
+import Notification from "../../../models/notification.mjs"
 
 export default class ForumThread extends Entity {
 
@@ -48,6 +49,7 @@ export default class ForumThread extends Entity {
   }
 
   delete(){
+    this.rels.notification?.map(n => Notification.from(n)).forEach(n => n.dismiss())
     this.posts.forEach(p => p.delete())
     this.files.forEach(f => f.delete())
     super.delete()

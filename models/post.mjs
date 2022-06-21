@@ -3,6 +3,7 @@ import { getTimestamp } from "../../../tools/date.mjs"
 import {md2html} from "../../../tools/markdown.mjs"
 import User from "../../../models/user.mjs"
 import ForumThread from "./thread.mjs"
+import Notification from "../../../models/notification.mjs"
 
 export default class ForumPost extends Entity {
 
@@ -40,6 +41,11 @@ export default class ForumPost extends Entity {
 
   get thread(){
     return ForumThread.from(this.relsrev.post?.[0])
+  }
+
+  delete(){
+    this.rels.notification?.map(n => Notification.from(n)).forEach(n => n.dismiss())
+    super.delete()
   }
 
   toObj(){
