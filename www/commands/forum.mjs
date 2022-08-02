@@ -9,7 +9,7 @@ export class OpenThread extends Command{
   ]
 
   static createInstances(context){
-    if(!context.userPermissions.includes("axm.forum.read")) return []
+    if(!context.userPermissions.includes("forum.read")) return []
     let id;
     if(context.type == "thread"){
       id = context.id;
@@ -37,7 +37,7 @@ export class SearchForum extends Command{
   ]
 
   static createInstances(context){
-    if(!context.userPermissions.includes("axm.forum.read")) return []
+    if(!context.userPermissions.includes("forum.read")) return []
     let cmd = new SearchForum()
     cmd.context = context;
     cmd.filter = cmd.getQueryWithoutKeywords().join(" ")
