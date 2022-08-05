@@ -284,6 +284,7 @@ class Element extends HTMLElement {
 
   disconnectedCallback() {
     //this.shadowRoot.querySelector('#toggle-info').removeEventListener();
+    off("first-page-load", elementName)
     off("changed-page-query", elementName)
     off("returned-to-page", elementName)
     this.parentNodeSaved.removeEventListener("scroll",this.onScroll,false);
