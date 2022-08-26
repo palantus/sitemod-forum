@@ -175,7 +175,7 @@ export default (app) => {
     if(!validateAccess(req, res, {permission: "forum.admin"})) return;
     let postUsers = [...new Set(query.tag("forumpost").all.filter(p => !p.related.owner).map(p => p.authorName))].map(name => ({
       name,
-      suggestedUserId: User.lookupName(name)?.id || query.tag("user").prop("forumName", name).first?.id || null
+      suggestedUserId: User.lookupName(name)?.id || null
     }))
     res.json(postUsers)
   });
