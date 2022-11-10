@@ -9,6 +9,7 @@ import "/components/action-bar-item.mjs"
 import "/components/dropdown-menu.mjs"
 import "/components/list-inline.mjs"
 import "/components/field-edit.mjs"
+import "/components/progress.mjs"
 import { confirmDialog, alertDialog, promptDialog, showDialog } from "../../components/dialog.mjs"
 
 const template = document.createElement('template');
@@ -102,6 +103,7 @@ template.innerHTML = `
 
   <dialog-component title="Add file" id="add-file-dialog">
     <input type="file" multiple>
+    <progress-bar complete-text="Upload complete!"></progress-bar>
     <br><br><br>
     <h3>Access:</h3>
     <p>Select the following checkbox, if all other forum users should be able to view the file. If you do not select this, only forum admins can see the file. Before selecting it, please make sure that it doesn't contain any sensitive information.</p>
@@ -325,12 +327,16 @@ class Element extends HTMLElement {
   async addFile(){
     return new Promise((resolve, reject) => {
       let dialog = this.shadowRoot.getElementById("add-file-dialog")
+      let progress = dialog.querySelector("progress-bar")
+      progress.classList.toggle("hidden", true)
+      let onProgress = value => progress.setAttribute("value", value)
       showDialog(dialog, {
         ok: async (val) => {
+          progress.classList.toggle("hidden", false)
           let formData = new FormData();
           for(let file of dialog.querySelector("input[type=file]").files)
             formData.append("file", file);
-          let file = (await api.upload(`file/tag/forum-file/upload?acl=r:${val.accessAll?"permission:forum.read":"permission:forum.admin"};w:permission:forum.admin`, formData))?.[0];
+          let file = (await api.upload(`file/tag/forum-file/upload?acl=r:${val.accessAll?"permission:forum.read":"permission:forum.admin"};w:permission:forum.admin`, formData, {onProgress}))?.[0];
           if(file){
             await api.post(`forum/thread/${this.threadId}/files`, {fileId: file.id})
             return resolve()
