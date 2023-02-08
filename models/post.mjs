@@ -23,6 +23,10 @@ export default class ForumPost extends Entity {
     return query.type(ForumPost).tag("forumpost").relatedTo(user, "owner").all
   }
 
+  static all(){
+    return query.type(ForumPost).tag("forumpost").all
+  }
+
   updateHTML(){
     this.bodyHTML = md2html(this.body)
   }

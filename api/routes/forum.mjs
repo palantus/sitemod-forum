@@ -52,6 +52,7 @@ export default (app) => {
     if(!forum) throw "Unknown forum"
     if(!req.body.title || typeof req.body.title !== "string") throw "Invalid title"
     let thread = new ForumThread()
+    thread.authorName = res.locals.user.name; //Used when a user is deleted!
     thread.title = req.body.title
     thread.rel(res.locals.user, "owner")
     thread.subscribe(res.locals.user)
@@ -90,6 +91,7 @@ export default (app) => {
     if(!thread) throw "Unknown thread"
     if(!req.body.body || typeof req.body.body !== "string") throw "Invalid body"
     let post = new ForumPost()
+    post.authorName = res.locals.user.name; //Used when a user is deleted!
     post.body = req.body.body
     post.rel(res.locals.user, "owner")
     post.updateHTML()
@@ -173,7 +175,7 @@ export default (app) => {
 
   route.get('/users/missing', function (req, res, next) {
     if(!validateAccess(req, res, {permission: "forum.admin"})) return;
-    let postUsers = [...new Set(query.tag("forumpost").all.filter(p => !p.related.owner).map(p => p.authorName))].map(name => ({
+    let postUsers = [...new Set(query.tag("forumpost").all.filter(p => !p.related.owner).map(p => p.authorName||`ERROR: Unnamed user on post ${p.id}`))].map(name => ({
       name,
       suggestedUserId: User.lookupName(name)?.id || null
     }))

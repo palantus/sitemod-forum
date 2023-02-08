@@ -3,6 +3,8 @@ import Role from "../../models/role.mjs"
 import DataType from "../../models/datatype.mjs"
 import Forum from "./models/forum.mjs"
 import Setup from "./models/setup.mjs"
+import ForumThread from "./models/thread.mjs"
+import ForumPost from "./models/post.mjs"
 
 export default async () => {
   // init
@@ -13,6 +15,14 @@ export default async () => {
           .init({typeModel: Forum})
 
   Setup.lookup().ensureDefaults();
+
+  // Upgrade jobs - will be removed in later revision
+  ForumThread.all().filter(t => !t.authorName && t.related.owner?.name).forEach(t => {
+    t.authorName = t.related.owner.name
+  })
+  ForumPost.all().filter(t => !t.authorName && t.related.owner?.name).forEach(t => {
+    t.authorName = t.related.owner.name
+  })
 
   return {
   }
