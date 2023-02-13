@@ -2,7 +2,7 @@ import express from "express"
 const { Router, Request, Response } = express;
 const route = Router();
 import Entity, { query } from "entitystorage";
-import { validateAccess, noGuest } from "../../../../services/auth.mjs"
+import { validateAccess, noGuest, permission } from "../../../../services/auth.mjs"
 import ForumThread from "../../models/thread.mjs";
 import Forum from "../../models/forum.mjs";
 import ForumPost from "../../models/post.mjs";
@@ -69,11 +69,6 @@ export default (app) => {
       thread.title = req.body.title
     }
 
-    if(typeof req.body.subscribe === "boolean"){
-      if(req.body.subscribe) thread.subscribe(res.locals.user)
-      else thread.unsubscribe(res.locals.user)
-    }
-
     if(req.body.forumId && typeof req.body.forumId === "string"){
       if(!validateAccess(req, res, {permission: "forum.admin"})) return;
       let forum = Forum.lookup(req.body.forumId);
@@ -82,6 +77,20 @@ export default (app) => {
       thread.forum.removeRel(thread, "thread")
       forum.rel(thread, "thread")
     }
+    res.json({success: true})
+  });
+
+  route.post('/thread/:id/subscribe', noGuest, permission("forum.read"), function (req, res, next) {
+    let thread = ForumThread.lookup(req.params.id)
+    if(!thread) return res.sendStatus(404);
+    thread.subscribe(res.locals.user)
+    res.json({success: true})
+  });
+
+  route.post('/thread/:id/unsubscribe', noGuest, permission("forum.read"), function (req, res, next) {
+    let thread = ForumThread.lookup(req.params.id)
+    if(!thread) return res.sendStatus(404);
+    thread.unsubscribe(res.locals.user)
     res.json({success: true})
   });
 

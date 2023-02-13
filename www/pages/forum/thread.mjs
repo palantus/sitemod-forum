@@ -365,7 +365,7 @@ class Element extends HTMLElement {
   async subscribeClicked(){
     let isSubscribed = this.shadowRoot.getElementById("subscribe").hasAttribute("subscribed")
 
-    await api.patch(`forum/thread/${this.threadId}`, {subscribe: !isSubscribed})
+    await api.post(`forum/thread/${this.threadId}/${isSubscribed ? "un" : ""}subscribe`)
     let {forumThread: thread} = await api.query(`{forumThread(id: ${this.threadId}){isSubscribed}}`)
 
     this.shadowRoot.getElementById("subscribe").innerText = thread.isSubscribed ? "Unsubscribe" : "Subscribe"
