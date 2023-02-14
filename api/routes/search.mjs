@@ -8,6 +8,6 @@ export default (app) => {
   app.use("/search", route)
 
   route.get('/tokens/forum', function (req, res, next) {
-    import("../../../forum/services/search.mjs").then(({tokens}) => res.json(tokens));
+    import("../../../forum/services/search.mjs").catch(err => res.json([])).then(({tokens}) => res.json(tokens));
   });
 };
