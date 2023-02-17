@@ -87,6 +87,7 @@ export const ForumThreadType = new GraphQLObjectType({
     title: { type: GraphQLNonNull(GraphQLString) },
     url: { type: GraphQLString },
     postCount: { type: GraphQLInt, resolve: t => t.rels.post?.length || 0 },
+    fileCount: { type: GraphQLInt, resolve: t => t.rels.file?.length || 0 },
     posts: { type: GraphQLList(ForumPostType) },
     files: { type: GraphQLList(ForumFileType) },
     isSubscribed: {type: GraphQLNonNull(GraphQLBoolean), resolve: (parent, args, context) => !!parent.rels.subscribee?.find(u => u.id == context.user.id)},
