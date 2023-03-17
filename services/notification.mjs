@@ -1,5 +1,4 @@
 import CoreSetup from "../../../models/setup.mjs"
-import Mail from "../../mail/models/mail.mjs"
 import { query } from "entitystorage";
 import User from "../../../models/user.mjs";
 
