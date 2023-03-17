@@ -1,11 +1,19 @@
 import CoreSetup from "../../../models/setup.mjs"
-import LogEntry from "../../../models/logentry.mjs"
 import Mail from "../../mail/models/mail.mjs"
 import { query } from "entitystorage";
 import User from "../../../models/user.mjs";
 
-export async function sendMailsNewThread(thread){
+async function getMail(){
+  try{
+    return (await import("../../mail/models/mail.mjs")).default
+  } catch(err){
+    return null;
+  }
+}
 
+export async function sendMailsNewThread(thread){
+  let Mail = await getMail()
+  if(!Mail) return;
   for(let user of query.tag("user").relatedTo(query.prop("emailMeOnForumUpdates", true)).relatedTo(query.prop("notifyAllNewThreads", true)).all){
     if(!user.email) continue;
     if(user.id == thread.related.owner?.id) continue; // No need to notify author
@@ -32,7 +40,8 @@ export async function sendNotificationsNewThread(thread){
 }
 
 export async function sendMailsNewPosts(thread, post){
-
+  let Mail = await getMail()
+  if(!Mail) return;
   for(let user of query.type(User).tag("user").relatedTo(query.prop("emailMeOnForumUpdates", true)).all){
     if(!user.email) continue;
     if(user.id == post.related.owner?.id) continue; // No need to notify author
