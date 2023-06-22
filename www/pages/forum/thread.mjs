@@ -242,6 +242,10 @@ class Element extends HTMLElement {
 
     //Hide actionbar if there aren't any buttons visible
     this.shadowRoot.querySelector("action-bar").classList.toggle("hidden", !!!this.shadowRoot.querySelector("action-bar action-bar-item:not(.hidden)"))
+
+    if(thread.posts.length < 1){
+      this.replyClicked()
+    }
   }
 
   replyClicked(){
