@@ -39,7 +39,7 @@ export const ForumAuthorType = new GraphQLObjectType({
   description: 'This represents a forum author',
   fields: () => ({
     name: { type: GraphQLNonNull(GraphQLString) },
-    user: { type: UserType, resolve: (author, args, context) => context.user.permissions.includes("user.read") ? author.user : null}
+    user: { type: UserType, resolve: (author, args, context) => (context.user.permissions.includes("user.read") || context.user.id == author.user?.id) ? author.user : null}
   })
 })
 

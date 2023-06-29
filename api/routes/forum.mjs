@@ -53,7 +53,7 @@ export default (app) => {
     if(!req.body.title || typeof req.body.title !== "string") throw "Invalid title"
     let thread = new ForumThread()
     thread.authorName = res.locals.user.name; //Used when a user is deleted!
-    thread.title = req.body.title
+    thread.title = req.body.title.substring(0, 200);
     thread.rel(res.locals.user, "owner")
     thread.subscribe(res.locals.user)
     forum.rel(thread, "thread")
@@ -66,7 +66,7 @@ export default (app) => {
     if(!thread) throw "Unknown thread"
     if(req.body.title) {
       if(!req.body.title || typeof req.body.title !== "string") throw "Invalid title"
-      thread.title = req.body.title
+      thread.title = req.body.title.substring(0, 200)
     }
 
     if(req.body.forumId && typeof req.body.forumId === "string"){

@@ -56,6 +56,9 @@ template.innerHTML = `
       color: var(--contrast-color-muted);
     }
     .hidden{display: none;}
+
+    #new-title{width: calc(100% - 15px);}
+    #new-dialog label{width: 115px;display: inline-block;}
   </style>  
 
   <action-bar>
@@ -90,7 +93,8 @@ template.innerHTML = `
   </div>
 
   <dialog-component title="New thread" id="new-dialog">
-    <field-component label="Title"><input id="new-title"></input></field-component>
+    <label for="newitem-text"">Title: </label><br>
+    <textarea id="new-title" name="text" rows="8" wrap="soft" dialog-no-enter maxlength="200"></textarea>
   </dialog-component>
 
   <dialog-component title="Move thread" id="move-dialog">
@@ -225,10 +229,10 @@ class Element extends HTMLElement {
           !val.title ? "Please fill out title"
         : true,
       values: () => {return {
-        title: this.shadowRoot.getElementById("new-title").value
+        title: this.shadowRoot.getElementById("new-title").value.replace(/\n/g, "")
       }},
       close: () => {
-        this.shadowRoot.querySelectorAll("field-component input").forEach(e => e.value = '')
+        this.shadowRoot.querySelectorAll("#new-dialog textarea").forEach(e => e.value = '')
       }
     })
   }
