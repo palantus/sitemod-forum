@@ -209,8 +209,13 @@ class Element extends HTMLElement {
                   </div>`).join("")
 
     this.shadowRoot.getElementById("title").innerText = thread.title
-    this.shadowRoot.getElementById("subscribe").innerText = thread.isSubscribed ? "Unsubscribe" : "Subscribe"
-    this.shadowRoot.getElementById("subscribe").toggleAttribute("subscribed", thread.isSubscribed)
+
+    let hasParticipated = thread.posts.find(p => p.author.name == user.name) ? true : false
+
+    this.shadowRoot.getElementById("subscribe").innerText = (thread.isSubscribed || hasParticipated) ? "Unsubscribe" : "Subscribe"
+    this.shadowRoot.getElementById("subscribe").toggleAttribute("subscribed", thread.isSubscribed || hasParticipated)
+    this.shadowRoot.getElementById("subscribe").setAttribute("title", hasParticipated ? "You have participated in the thread, so you will always receive notifications" : "")
+    this.shadowRoot.getElementById("subscribe").toggleAttribute("disabled", hasParticipated)
 
     let threadInfoContainer = this.shadowRoot.getElementById("threadinfo")
     threadInfoContainer.style.display = "block";

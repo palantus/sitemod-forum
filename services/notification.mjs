@@ -45,7 +45,7 @@ export async function sendMailsNewPosts(thread, post){
     if(!user.email) continue;
     if(user.id == post.related.owner?.id) continue; // No need to notify author
     if(user.setup.notifyForumUpdates === false) continue;
-    if(!thread.rels.subscribee?.find(u => u.id == user.id)) continue; // Not subscribed to thread
+    if(!thread.rels.subscribee?.find(u => u.id == user.id) && !thread.participants.find(p => p.name == user.name)) continue; // Not subscribed to thread and not participated in it
     if(!user.permissions.includes("forum.read")) continue; //No need to notify someone who can't read it
     await new Mail({
       to: user.email, 
@@ -71,7 +71,7 @@ export async function sendNotificationsNewPosts(thread, post){
   for(let user of query.type(User).tag("user").all){
     if(user.id == post.related.owner?.id) continue; // No need to notify author
     if(user.setup.notifyForumUpdates === false) continue;
-    if(!thread.rels.subscribee?.find(u => u.id == user.id)) continue; // Not subscribed to thread
+    if(!thread.rels.subscribee?.find(u => u.id == user.id) && !thread.participants.find(p => p.name == user.name)) continue; // Not subscribed to thread and not participated in it
     if(!user.permissions.includes("forum.read")) continue; //No need to notify someone who can't read it
     post.rel(user.notify("forum", thread.title, {title: `${post.author.name} has replied on a forum thread`, refs: [{uiPath: `/forum/thread/${thread.id}`, title: "Go to thread"}]}), "notification")
   }

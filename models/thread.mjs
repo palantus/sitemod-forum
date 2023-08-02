@@ -67,6 +67,17 @@ export default class ForumThread extends Entity {
     }
   }
 
+  get participants(){
+    let allAutors = this.posts.map(p => p.author)
+    let authors = [];
+    for(let author of allAutors){
+      if(authors.find(a => a.name == author.name)) continue;
+      authors.push(author)
+    }
+
+    return authors;
+  }
+
   get lastActivityDate(){
     return this.posts.sort((a, b) => a.date < b.date ? 1 : -1)[0]?.date || this.date
   }
