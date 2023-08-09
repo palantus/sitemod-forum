@@ -75,14 +75,14 @@ class Element extends HTMLElement {
     this.shadowRoot.getElementById("lastthreads").innerHTML = profile?.threads.map(t => `
         <tr>
           <td>${t.date.substring(0, 19).replace("T", ' ')}</td>
-          <td><field-ref ref="/forum/thread/${t.id}">${t.id}: ${t.title}</field-ref></td>
+          <td><field-ref ref="/forum/thread/${t.id}">${t.title}</field-ref></td>
         </tr>
       `).join("")||""
 
     this.shadowRoot.getElementById("lastposts").innerHTML = profile?.posts.map(p => `
         <tr>
           <td>${p.date.substring(0, 19).replace("T", ' ')}</td>
-          <td><field-ref ref="/forum/thread/${p.thread.id}">${p.thread.id}: ${p.thread.title}</field-ref></td>
+          <td><field-ref ref="/forum/thread/${p.thread.id}">${p.thread.title}</field-ref></td>
         </tr>
       `).join("")||""
   }
