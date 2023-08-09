@@ -66,10 +66,19 @@ class Service {
       }
       let res;
 
-      if (paginationArgs.reverse === true)
-        res = allResults.sort((a, b) => a.date <= b.date ? 1 : -1)
-      else
-        res = allResults.sort((a, b) => a.date >= b.date ? -1 : 1)
+      switch(paginationArgs.sort){
+        case "activity":
+          allResults = allResults.map(thread => {
+            return {lastActivity: thread.lastActivityDate, thread}
+          })
+          res = (paginationArgs.reverse ? allResults.sort((a, b) => a.lastActivity <= b.lastActivity ? 1 : -1) 
+                                       : allResults.sort((a, b) => a.lastActivity >= b.lastActivity ? -1 : 1))
+                                       .map(r => r.thread)
+          break;
+        default:
+          res = paginationArgs.reverse ? allResults.sort((a, b) => a.date <= b.date ? 1 : -1) 
+                                       : allResults.sort((a, b) => a.date >= b.date ? -1 : 1)
+      }
 
       res = paginate(res, paginationArgs, "id")
       return { nodes: res, pageInfo: { totalCount: allResults.length } }

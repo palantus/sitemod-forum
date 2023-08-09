@@ -34,12 +34,17 @@ template.innerHTML = `
     }
     
     table thead th:nth-child(1){width: 30px}
-    table thead th:nth-child(2){width: 50px}
-    table thead th:nth-child(3){width: 140px}
+    table thead th:nth-child(2){width: 140px}
     table thead th:nth-child(4){width: 200px}
+    table thead th:nth-child(5){width: 200px}
     
     #resultinfo{
       margin-left: 0px; 
+      position: relative;
+      top: 2px;
+    }
+    #sortThreadsByActivity-container{
+      margin-left: 30px; 
       position: relative;
       top: 2px;
     }
@@ -76,15 +81,19 @@ template.innerHTML = `
     <input id="search" type="text" placeholder="Search current forum" value=""></input>
     <searchhelp-component path="search/tokens/forum"></searchhelp-component>
     <span id="resultinfo"></span>
+    <span id="sortThreadsByActivity-container">
+      <label for="sortThreadsByActivity">Sort threads by last activity</label>
+      <input type="checkbox" id="sortThreadsByActivity"></input>
+    </span>
 
     <table>
         <thead>
             <tr>
               <th></th>
-              <th>Id</th>
-              <th>Date</th>
-              <th>Author</th>
+              <th id="activityHeader">Date</th>
               <th>Title</th>
+              <th>Thread author</th>
+              <th>Last reply by</th>
             </tr>
         </thead>
         <tbody>
@@ -126,6 +135,11 @@ class Element extends HTMLElement {
     this.shadowRoot.getElementById("delete-btn").addEventListener("click", this.deleteSelected)
     this.shadowRoot.getElementById("select-all-btn").addEventListener("click", () => this.selectionTool.selectAll())
     this.shadowRoot.getElementById("clear-selection-btn").addEventListener("click", () => this.selectionTool.clear())
+    this.shadowRoot.getElementById("sortThreadsByActivity").addEventListener("change", async () => {
+      let newValue = this.shadowRoot.getElementById("sortThreadsByActivity").checked;
+      await api.patch("/forum/me/setup", {sortThreadsByActivity: newValue})
+      this.clearAndRefreshResults();
+    })
 
     this.forumId = /^\/forum\/([a-z0-9\-]+)/.exec(state().path)?.[1] || null
 
@@ -165,12 +179,15 @@ class Element extends HTMLElement {
             id,
             author{user{id},name},
             title,
-            date
+            date,
+            lastActivityDate,
+            lastReply{author{name}}
           },
           pageInfo{
             totalCount
           }
-        }
+        },
+        forumUserSetup{sortThreadsByActivity}
     }`, {input: {query: this.lastQuery.toLowerCase(), start, end, reverse: true}, forum: this.forumId})
     for(let i = 0; i < data.forumThreads.nodes.length; i++)
       this.results[i+start] = data.forumThreads.nodes[i]
@@ -179,6 +196,8 @@ class Element extends HTMLElement {
 
     this.shadowRoot.getElementById("move-btn").classList.toggle("hidden", !this.me.permissions.includes("forum.admin"))
     this.shadowRoot.getElementById("delete-btn").classList.toggle("hidden", !this.me.permissions.includes("forum.admin"))
+    this.shadowRoot.getElementById("sortThreadsByActivity").checked = data.forumUserSetup.sortThreadsByActivity
+    this.shadowRoot.getElementById("activityHeader").innerText = data.forumUserSetup.sortThreadsByActivity ? "Last activity" : "Thread created"
   }
 
   async clearResults(){
@@ -196,10 +215,14 @@ class Element extends HTMLElement {
         row.setAttribute("data-id", thread.id)
         row.classList.add("result")
         row.innerHTML = `
-              <td><field-ref ref="/forum/thread/${thread.id}"/>${thread.id}</field-ref></td>
-              <td>${thread.date.replaceAll("T", " ").substring(0, 19)}</td>
-              <td><field-ref ref="/forum/profile?name=${thread.author.name}">${thread.author.name}</field-ref></td>
+              <td>${
+                this.shadowRoot.getElementById("sortThreadsByActivity").checked ?
+                    thread.lastActivityDate.replaceAll("T", " ").substring(0, 19)
+                  : thread.date.replaceAll("T", " ").substring(0, 19)
+                  }</td>
               <td><field-ref ref="/forum/thread/${thread.id}"/>${thread.title}</field-ref></td>
+              <td><field-ref ref="/forum/profile?name=${thread.author.name}">${thread.author.name}</field-ref></td>
+              <td>${thread.lastReply?.author ? `<field-ref ref="/forum/profile?name=${thread.lastReply.author.name}">${thread.lastReply.author.name}</field-ref>` : ""}</td>
         `
         tab.appendChild(row);
     }

@@ -54,13 +54,19 @@ class Element extends HTMLElement {
 
     this.refreshData = this.refreshData.bind(this)
 
-    this.shadowRoot.getElementById("view-all-threads").addEventListener("click", () => goto(`/forum?filter=authoruser%3A${this.userId}`))
-    this.shadowRoot.getElementById("view-all-posts").addEventListener("click", () => goto(`/forum?filter=withuser%3A${this.userId}`))
+    this.shadowRoot.getElementById("view-all-threads").addEventListener("click", () => {
+      if(this.profile?.id) goto(`/forum?filter=authoruser%3A${this.profile.id}`)
+      else goto(`/forum?filter=author%3A%22${this.userName}%22`)
+    })
+    this.shadowRoot.getElementById("view-all-posts").addEventListener("click", () => {
+      if(this.profile?.id) goto(`/forum?filter=withuser%3A${this.profile.id}`)
+      else goto(`/forum?filter=with%3A%22${this.userName}%22`)
+    })
   }
 
   async refreshData(){
     this.userName = state().query.name
-    let profile = (await api.query(`{forumProfile(name: "${this.userName}", returnCount: 10) {id, name, threadCount, postCount, threads{id, date, title}, posts{id, date, thread{id, title}}}}`)).forumProfile
+    let profile = this.profile = (await api.query(`{forumProfile(name: "${this.userName}", returnCount: 10) {id, name, threadCount, postCount, threads{id, date, title}, posts{id, date, thread{id, title}}}}`)).forumProfile
 
     this.shadowRoot.getElementById("name").setAttribute("value", profile?.name||this.userName);
     this.shadowRoot.getElementById("threadCount").setAttribute("value", profile?.threadCount||0);

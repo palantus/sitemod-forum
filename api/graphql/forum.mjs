@@ -113,6 +113,14 @@ export const ForumThreadResultType = new GraphQLObjectType({
   }
 })
 
+export const ForumUserSetupType = new GraphQLObjectType({
+  name: 'ForumUserSetupType',
+  description: 'This represents forum user setup',
+  fields: () => ({
+    sortThreadsByActivity: { type: GraphQLNonNull(GraphQLBoolean) },
+  })
+})
+
 export default {
   registerQueries: (fields) => {
     fields.forumThread = {
@@ -130,7 +138,13 @@ export default {
         forum: { type: GraphQLString }
       },
       description: "Search for forum threads",
-      resolve: (parent, args, context) => ifPermissionThrow(context, "forum.read", forumService.search(args.input?.query, args.input, args.forum))
+      resolve: (parent, args, context) => {
+        let userSetup = context.user.setup
+        if(!args.input.sort)
+          args.input.sort = userSetup.sortThreadsByActivity ? "activity" : "date"
+        let result = forumService.search(args.input?.query, args.input, args.forum)
+        return ifPermissionThrow(context, "forum.read", result)
+      }
     }
     fields.forums = {
       type: GraphQLList(ForumType),
@@ -142,6 +156,13 @@ export default {
       description: "Forum client setup",
       resolve: (parent, args, context) => ifPermissionThrow(context, "forum.read", {
         maxFileSizeMB: Setup.lookup().maxFileSizeMB
+      })
+    }
+    fields.forumUserSetup = {
+      type: GraphQLNonNull(ForumUserSetupType),
+      description: "Forum user setup",
+      resolve: (parent, args, context) => ifPermissionThrow(context, "forum.read", {
+        sortThreadsByActivity: !!context.user.setup.sortThreadsByActivity
       })
     }
     fields.forumProfile = {

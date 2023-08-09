@@ -17,6 +17,7 @@ export default (app) => {
     if(typeof req.body.notifyForumUpdates === "boolean") u.setup.notifyForumUpdates = !!req.body.notifyForumUpdates;
     if(typeof req.body.emailMeOnForumUpdates === "boolean") u.setup.emailMeOnForumUpdates = !!req.body.emailMeOnForumUpdates;
     if(typeof req.body.notifyAllNewThreads === "boolean") u.setup.notifyAllNewThreads = !!req.body.notifyAllNewThreads;
+    if(typeof req.body.sortThreadsByActivity === "boolean") u.setup.sortThreadsByActivity = !!req.body.sortThreadsByActivity;
     res.json({success: true})
   });
 };
