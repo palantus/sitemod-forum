@@ -11,6 +11,7 @@ import "/components/field-edit.mjs"
 import "/components/action-bar.mjs"
 import "/components/action-bar-item.mjs"
 import "/components/data/searchhelp.mjs"
+import { escapeHTML } from "/libs/tools.mjs"
 
 const template = document.createElement('template');
 template.innerHTML = `
@@ -220,7 +221,7 @@ class Element extends HTMLElement {
                     thread.lastActivityDate.replaceAll("T", " ").substring(0, 19)
                   : thread.date.replaceAll("T", " ").substring(0, 19)
                   }</td>
-              <td><field-ref ref="/forum/thread/${thread.id}"/>${thread.title}</field-ref></td>
+              <td><field-ref ref="/forum/thread/${thread.id}"/><lit>${escapeHTML(thread.title)}</lit></field-ref></td>
               <td><field-ref ref="/forum/profile?name=${thread.author.name}">${thread.author.name}</field-ref></td>
               <td>${thread.lastReply?.author ? `<field-ref ref="/forum/profile?name=${thread.lastReply.author.name}">${thread.lastReply.author.name}</field-ref>` : ""}</td>
         `
