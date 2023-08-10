@@ -5,7 +5,7 @@ import "/components/field-edit.mjs"
 import "/components/field-list.mjs"
 import {on, off} from "/system/events.mjs"
 import {state, goto} from "/system/core.mjs"
-import {alertDialog} from "/components/dialog.mjs"
+import { getUser } from "/system/user.mjs"
 
 const template = document.createElement('template');
 template.innerHTML = `
@@ -65,7 +65,7 @@ class Element extends HTMLElement {
   }
 
   async refreshData(){
-    this.userName = state().query.name
+    this.userName = state().query.name || (await getUser()).name
     let profile = this.profile = (await api.query(`{forumProfile(name: "${this.userName}", returnCount: 10) {id, name, threadCount, postCount, threads{id, date, title}, posts{id, date, thread{id, title}}}}`)).forumProfile
 
     this.shadowRoot.getElementById("name").setAttribute("value", profile?.name||this.userName);
