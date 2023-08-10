@@ -68,6 +68,7 @@ template.innerHTML = `
   </style>  
 
   <action-bar>
+    <action-bar-item id="refresh-btn">Refresh</action-bar-item>
     <action-bar-item id="new-btn">New thread</action-bar-item>
     <div id="selection-tools" class="hidden">
       <span>Selection: </span>
@@ -131,6 +132,7 @@ class Element extends HTMLElement {
       this.queryChanged()
       pushStateQuery(this.lastQuery ? {filter: this.lastQuery} : undefined)
     })
+    this.shadowRoot.getElementById("refresh-btn").addEventListener("click", this.clearAndRefreshResults)
     this.shadowRoot.getElementById("new-btn").addEventListener("click", this.newClicked)
     this.shadowRoot.getElementById("move-btn").addEventListener("click", this.moveSelected)
     this.shadowRoot.getElementById("delete-btn").addEventListener("click", this.deleteSelected)
