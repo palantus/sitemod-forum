@@ -18,6 +18,7 @@ import { ifPermission, ifPermissionThrow } from "../../../../services/auth.mjs"
 import User from "../../../../models/user.mjs"
 import ForumPost from "../../models/post.mjs"
 import Setup from "../../models/setup.mjs"
+import {FileType} from "../../../files/api/graphql/files.mjs"
 
 export const ForumProfileType = new GraphQLObjectType({
   name: 'ForumProfileType',
@@ -40,16 +41,6 @@ export const ForumAuthorType = new GraphQLObjectType({
   fields: () => ({
     name: { type: GraphQLNonNull(GraphQLString) },
     user: { type: UserType, resolve: (author, args, context) => (context.user.permissions.includes("user.read") || context.user.id == author.user?.id) ? author.user : null}
-  })
-})
-
-export const ForumFileType = new GraphQLObjectType({
-  name: 'ForumFileType',
-  description: 'This represents a forum file',
-  fields: () => ({
-    id: { type: GraphQLNonNull(GraphQLInt), resolve: t => t._id },
-    name: { type: GraphQLNonNull(GraphQLString) },
-    mime: { type: GraphQLString }
   })
 })
 
@@ -90,7 +81,7 @@ export const ForumThreadType = new GraphQLObjectType({
     postCount: { type: GraphQLInt, resolve: t => t.rels.post?.length || 0 },
     fileCount: { type: GraphQLInt, resolve: t => t.rels.file?.length || 0 },
     posts: { type: GraphQLList(ForumPostType) },
-    files: { type: GraphQLList(ForumFileType) },
+    files: { type: GraphQLList(FileType) },
     isSubscribed: {type: GraphQLNonNull(GraphQLBoolean), resolve: (parent, args, context) => !!parent.rels.subscribee?.find(u => u.id == context.user.id)},
     forum: {type: GraphQLNonNull(ForumType)},
     lastActivityDate: { type: GraphQLNonNull(GraphQLString) },
