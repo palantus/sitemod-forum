@@ -48,7 +48,8 @@ export const ForumFileType = new GraphQLObjectType({
   description: 'This represents a forum file',
   fields: () => ({
     id: { type: GraphQLNonNull(GraphQLInt), resolve: t => t._id },
-    name: { type: GraphQLNonNull(GraphQLString) }
+    name: { type: GraphQLNonNull(GraphQLString) },
+    mime: { type: GraphQLString }
   })
 })
 
