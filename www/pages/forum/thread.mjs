@@ -275,7 +275,7 @@ class Element extends HTMLElement {
       editor.classList.toggle("hidden", !visible)
     } else {
       // Don't load the editor, unless it is needed
-      import("/components/richtext.mjs").then(() => {
+      import("../../components/richtext.mjs").then(() => {
         this.shadowRoot.getElementById("reply-editor-container").innerHTML = `<richtext-component id="reply-editor" nosave submit></richtext-component>`
         editor = this.shadowRoot.getElementById("reply-editor")
         editor.addEventListener("close", () => this.toggleReplyEditor(false))
@@ -303,7 +303,7 @@ class Element extends HTMLElement {
       this.refreshData()
     } else if(e.target.classList.contains("edit")){
       // Don't load the editor, unless it is needed
-      import("/components/richtext.mjs").then(() => {
+      import("../../components/richtext.mjs").then(() => {
         let container = this.shadowRoot.getElementById("posts")
         container.querySelectorAll(".post-edit").forEach(e => e.remove())
         let div = document.createElement("div")
