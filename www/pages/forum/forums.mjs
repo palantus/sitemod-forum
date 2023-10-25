@@ -1,14 +1,14 @@
 const elementName = 'forums-page'
 
-import api from "/system/api.mjs"
-import {on, off} from "/system/events.mjs"
-import {goto} from "/system/core.mjs"
-import "/components/field-ref.mjs"
-import "/components/field-edit.mjs"
-import "/components/action-bar.mjs"
-import "/components/action-bar-item.mjs"
-import "/components/dropdown-menu.mjs"
-import {showDialog, confirmDialog} from "/components/dialog.mjs"
+import api from "../../system/api.mjs"
+import {on, off} from "../../system/events.mjs"
+import {goto} from "../../system/core.mjs"
+import "../../components/field-ref.mjs"
+import "../../components/field-edit.mjs"
+import "../../components/action-bar.mjs"
+import "../../components/action-bar-item.mjs"
+import "../../components/dropdown-menu.mjs"
+import {showDialog, confirmDialog} from "../../components/dialog.mjs"
 
 const template = document.createElement('template');
 template.innerHTML = `

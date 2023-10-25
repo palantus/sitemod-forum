@@ -1,15 +1,15 @@
 const elementName = 'forumthread-page'
 
-import api from "/system/api.mjs"
-import {on, off, fire} from "/system/events.mjs"
-import {state, setPageTitle, goto} from "/system/core.mjs"
-import {getUser} from "/system/user.mjs"
-import "/components/action-bar.mjs"
-import "/components/action-bar-item.mjs"
-import "/components/dropdown-menu.mjs"
-import "/components/list-inline.mjs"
-import "/components/field-edit.mjs"
-import "/components/progress.mjs"
+import api from "../../system/api.mjs"
+import {on, off, fire} from "../../system/events.mjs"
+import {state, setPageTitle, goto} from "../../system/core.mjs"
+import {getUser} from "../../system/user.mjs"
+import "../../components/action-bar.mjs"
+import "../../components/action-bar-item.mjs"
+import "../../components/dropdown-menu.mjs"
+import "../../components/list-inline.mjs"
+import "../../components/field-edit.mjs"
+import "../../components/progress.mjs"
 import { confirmDialog, alertDialog, promptDialog, showDialog } from "../../components/dialog.mjs"
 
 const template = document.createElement('template');

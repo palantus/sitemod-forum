@@ -1,12 +1,12 @@
 const elementName = 'forum-missing-users-page'
 
-import api from "/system/api.mjs"
-import "/components/action-bar.mjs"
-import "/components/action-bar-item.mjs"
-import "/components/field-ref.mjs"
-import "/components/field-edit.mjs"
-import {on, off} from "/system/events.mjs"
-import { showDialog, alertDialog } from "/components/dialog.mjs"
+import api from "../../system/api.mjs"
+import "../../components/action-bar.mjs"
+import "../../components/action-bar-item.mjs"
+import "../../components/field-ref.mjs"
+import "../../components/field-edit.mjs"
+import {on, off} from "../../system/events.mjs"
+import { showDialog, alertDialog } from "../../components/dialog.mjs"
 
 const template = document.createElement('template');
 template.innerHTML = `

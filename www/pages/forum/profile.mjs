@@ -1,11 +1,11 @@
 const elementName = 'forum-profile-page'
 
-import api from "/system/api.mjs"
-import "/components/field-edit.mjs"
-import "/components/field-list.mjs"
-import {on, off} from "/system/events.mjs"
-import {state, goto} from "/system/core.mjs"
-import { getUser } from "/system/user.mjs"
+import api from "../../system/api.mjs"
+import "../../components/field-edit.mjs"
+import "../../components/field-list.mjs"
+import {on, off} from "../../system/events.mjs"
+import {state, goto} from "../../system/core.mjs"
+import { getUser } from "../../system/user.mjs"
 
 const template = document.createElement('template');
 template.innerHTML = `

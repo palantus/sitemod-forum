@@ -1,17 +1,17 @@
 const elementName = 'forum-page'
 
-import api from "/system/api.mjs"
-import "/components/field-ref.mjs"
-import {pushStateQuery, state, goto} from "/system/core.mjs"
-import {getUser} from "/system/user.mjs"
-import {on, off} from "/system/events.mjs"
-import {makeRowsSelectable} from "/libs/table-tools.mjs"
-import { alertDialog, showDialog, confirmDialog } from "/components/dialog.mjs"
-import "/components/field-edit.mjs"
-import "/components/action-bar.mjs"
-import "/components/action-bar-item.mjs"
-import "/components/data/searchhelp.mjs"
-import { escapeHTML } from "/libs/tools.mjs"
+import api from "../../system/api.mjs"
+import "../../components/field-ref.mjs"
+import {pushStateQuery, state, goto} from "../../system/core.mjs"
+import {getUser} from "../../system/user.mjs"
+import {on, off} from "../../system/events.mjs"
+import {makeRowsSelectable} from "../../libs/table-tools.mjs"
+import { alertDialog, showDialog, confirmDialog } from "../../components/dialog.mjs"
+import "../../components/field-edit.mjs"
+import "../../components/action-bar.mjs"
+import "../../components/action-bar-item.mjs"
+import "../../components/data/searchhelp.mjs"
+import { escapeHTML } from "../../libs/tools.mjs"
 
 const template = document.createElement('template');
 template.innerHTML = `
