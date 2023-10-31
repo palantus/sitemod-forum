@@ -2,7 +2,7 @@ const elementName = 'forumthread-page'
 
 import api from "../../system/api.mjs"
 import {on, off, fire} from "../../system/events.mjs"
-import {state, setPageTitle, goto} from "../../system/core.mjs"
+import {state, setPageTitle, goto, stylesheets} from "../../system/core.mjs"
 import {getUser} from "../../system/user.mjs"
 import "../../components/action-bar.mjs"
 import "../../components/action-bar-item.mjs"
@@ -14,7 +14,6 @@ import { confirmDialog, alertDialog, promptDialog, showDialog } from "../../comp
 
 const template = document.createElement('template');
 template.innerHTML = `
-  <link rel='stylesheet' href='/css/global.css'>
   <style>
     #container{
         position: relative;
@@ -122,7 +121,8 @@ class Element extends HTMLElement {
   constructor() {
     super();
 
-    this.attachShadow({ mode: 'open' });
+    this.attachShadow({ mode: 'open' })
+        .adoptedStyleSheets = [stylesheets.global];
     this.shadowRoot.appendChild(template.content.cloneNode(true));
     
     this.replyClicked = this.replyClicked.bind(this)
