@@ -201,8 +201,8 @@ class Element extends HTMLElement {
                       <div slot="content">
                         <h2>Options</h2>
                         <p>You have the following options available:</p>
-                        <button class="delete" class="${(user.id == p.author.user?.id || user.permissions.includes("forum.admin")) && user.permissions.includes("forum.post.delete") ? "" : "hidden"}">Delete post</button>
-                        <button class="edit" class="${(user.id == p.author.user?.id || user.permissions.includes("forum.admin")) && user.permissions.includes("forum.post.edit") ? "" : "hidden"}">Edit post</button>
+                        <button class="delete${(user.id == p.author.user?.id || user.permissions.includes("forum.admin")) && user.permissions.includes("forum.post.delete") ? "" : " hidden"}">Delete post</button>
+                        <button class="edit${(user.id == p.author.user?.id || user.permissions.includes("forum.admin")) && user.permissions.includes("forum.post.edit") ? "" : " hidden"}">Edit post</button>
                       </div>
                     </dropdown-menu-component>
                     <div class="postbody${p.bodyHTML?" rendered":""}">${p.bodyHTML ? p.bodyHTML : p.body.trim().replace(/(\r\n|\n|\r)/gm, "<br/>")}</div>
