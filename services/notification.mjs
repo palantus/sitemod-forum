@@ -13,8 +13,10 @@ async function getMail(){
 export async function sendMailsNewThread(thread){
   let Mail = await getMail()
   if(!Mail) return;
-  for(let user of query.tag("user").relatedTo(query.prop("emailMeOnForumUpdates", true)).relatedTo(query.prop("notifyAllNewThreads", true)).all){
+  for(let user of query.type(User).tag("user").relatedTo(query.prop("emailMeOnForumUpdates", true)).relatedTo(query.prop("notifyAllNewThreads", true)).all){
     if(!user.email) continue;
+    if(!user.active) continue;
+    if(!user.permissions.includes("forum.read")) continue;
     if(user.id == thread.related.owner?.id) continue; // No need to notify author
     await new Mail({
       to: user.email, 
@@ -33,6 +35,8 @@ export async function sendMailsNewThread(thread){
 
 export async function sendNotificationsNewThread(thread){
   for(let user of query.type(User).tag("user").relatedTo(query.prop("notifyAllNewThreads", true)).all){
+    if(!user.active) continue;
+    if(!user.permissions.includes("forum.read")) continue;
     if(user.id == thread.related.owner?.id) continue; // No need to notify author
     thread.rel(user.notify("forum", thread.title, {title: "New thread on forums", refs: [{uiPath: `/forum/thread/${thread.id}`, title: "Go to thread"}]}), "notification")
   }
@@ -43,6 +47,8 @@ export async function sendMailsNewPosts(thread, post){
   if(!Mail) return;
   for(let user of query.type(User).tag("user").relatedTo(query.prop("emailMeOnForumUpdates", true)).all){
     if(!user.email) continue;
+    if(!user.active) continue;
+    if(!user.permissions.includes("forum.read")) continue;
     if(user.id == post.related.owner?.id) continue; // No need to notify author
     if(user.setup.notifyForumUpdates === false) continue;
     if(!thread.rels.subscribee?.find(u => u.id == user.id) && !thread.participants.find(p => p.name == user.name)) continue; // Not subscribed to thread and not participated in it
