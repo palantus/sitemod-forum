@@ -15,6 +15,7 @@ export let tokens = [
   {keywords: ["withuser"], title: "Participant of thread (user id)", resolve: token => `post.owner.prop:"id=${token}"`},
   {keywords: ["changedsince"], title: "Threads changed since a given date/time (YYYY-MM-DDTHH:MM:SS)", resolve: token => `post.prop:"date>${token}"|file.prop:"timestamp>${token}"`},
   {keywords: ["createdsince"], title: "Threads created since a given date/time (YYYY-MM-DDTHH:MM:SS)", resolve: token => `prop:"date>${token}"`},
+  {keywords: ["hasfile"], title: "Search for threads with attachments/files", resolve: token => `file.tag:file`},
   {keywords: [null], title: "Text search", resolve: token => `(prop:"title~${token}"|prop:"authorName~${token}"|post.prop:"body~${token}"|prop:"id=${token}"|post.owner.prop:"name~${token}")`}
 ]
 
