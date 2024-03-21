@@ -1,4 +1,5 @@
-import forumService from "../../services/search.mjs"
+import searchService from "../../services/search.mjs"
+import { generateChangelog } from "../../services/history.mjs"
 import { PageableResultInfo, PageableSearchArgsType } from "../../../../api/graphql/common.mjs"
 import Entity, { query } from "entitystorage"
 import {
@@ -18,7 +19,7 @@ import { ifPermission, ifPermissionThrow } from "../../../../services/auth.mjs"
 import User from "../../../../models/user.mjs"
 import ForumPost from "../../models/post.mjs"
 import Setup from "../../models/setup.mjs"
-import {FileType} from "../../../files/api/graphql/files.mjs"
+import { FileType } from "../../../files/api/graphql/files.mjs"
 
 export const ForumProfileType = new GraphQLObjectType({
   name: 'ForumProfileType',
@@ -40,7 +41,7 @@ export const ForumAuthorType = new GraphQLObjectType({
   description: 'This represents a forum author',
   fields: () => ({
     name: { type: GraphQLNonNull(GraphQLString) },
-    user: { type: UserType, resolve: (author, args, context) => (context.user.permissions.includes("user.read") || context.user.id == author.user?.id) ? author.user : null}
+    user: { type: UserType, resolve: (author, args, context) => (context.user.permissions.includes("user.read") || context.user.id == author.user?.id) ? author.user : null }
   })
 })
 
@@ -54,7 +55,7 @@ export const ForumPostType = new GraphQLObjectType({
     date: { type: GraphQLNonNull(GraphQLString) },
     edited: { type: GraphQLString },
     author: { type: GraphQLNonNull(ForumAuthorType) },
-    thread: {type: GraphQLNonNull(ForumThreadType)}
+    thread: { type: GraphQLNonNull(ForumThreadType) }
   })
 })
 
@@ -82,10 +83,11 @@ export const ForumThreadType = new GraphQLObjectType({
     fileCount: { type: GraphQLInt, resolve: t => t.rels.file?.length || 0 },
     posts: { type: GraphQLList(ForumPostType) },
     files: { type: GraphQLList(FileType) },
-    isSubscribed: {type: GraphQLNonNull(GraphQLBoolean), resolve: (parent, args, context) => !!parent.rels.subscribee?.find(u => u.id == context.user.id)},
-    forum: {type: GraphQLNonNull(ForumType)},
+    isSubscribed: { type: GraphQLNonNull(GraphQLBoolean), resolve: (parent, args, context) => !!parent.rels.subscribee?.find(u => u.id == context.user.id) },
+    forum: { type: GraphQLNonNull(ForumType) },
     lastActivityDate: { type: GraphQLNonNull(GraphQLString) },
-    lastReply: { type: ForumPostType }
+    lastReply: { type: ForumPostType },
+    log: { type: GraphQLList(ForumThreadLogEntryType), resolve: t => t.logEntries.map(e => e.toObj()) },
   })
 })
 
@@ -113,6 +115,25 @@ export const ForumUserSetupType = new GraphQLObjectType({
   })
 })
 
+export const ForumThreadLogEntryType = new GraphQLObjectType({
+  name: 'ForumThreadLogEntryType',
+  description: 'This represents a Log entry for a forum thread',
+  fields: () => ({
+    timestamp: { type: GraphQLNonNull(GraphQLString) },
+    user: { type: ForumThreadLogUserType },
+    text: { type: GraphQLString },
+  })
+})
+
+export const ForumThreadLogUserType = new GraphQLObjectType({
+  name: 'ForumThreadLogUserType',
+  description: 'This represents a user in a forum thread log entry',
+  fields: () => ({
+    id: { type: GraphQLNonNull(GraphQLString) },
+    name: { type: GraphQLNonNull(GraphQLString) },
+  })
+})
+
 export default {
   registerQueries: (fields) => {
     fields.forumThread = {
@@ -132,9 +153,9 @@ export default {
       description: "Search for forum threads",
       resolve: (parent, args, context) => {
         let userSetup = context.user.setup
-        if(!args.input.sort)
+        if (!args.input.sort)
           args.input.sort = userSetup.sortThreadsByActivity ? "activity" : "date"
-        let result = forumService.search(args.input?.query, args.input, args.forum)
+        let result = searchService.search(args.input?.query, args.input, args.forum)
         return ifPermissionThrow(context, "forum.read", result)
       }
     }
@@ -167,7 +188,7 @@ export default {
       resolve: (parent, args, context) => {
         ifPermissionThrow(context, "forum.read");
         let user = User.lookupName(args.name)
-        if(!user) return null;
+        if (!user) return null;
         let threads = ForumThread.allByAuthor(user)
         let posts = ForumPost.allByAuthor(user)
         return {
@@ -177,9 +198,9 @@ export default {
           threadCount: threads.length,
           postCount: posts.length,
           threads: !isNaN(args.returnCount) ? threads.sort((a, b) => a.date < b.date ? 1 : -1).slice(0, args.returnCount)
-                                            : threads,
+            : threads,
           posts: !isNaN(args.returnCount) ? posts.sort((a, b) => a.date < b.date ? 1 : -1).slice(0, args.returnCount)
-                                          : posts,
+            : posts,
         }
       }
     }

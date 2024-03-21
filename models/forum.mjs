@@ -3,35 +3,40 @@ import ForumThread from "./thread.mjs"
 
 export default class Forum extends Entity {
 
-  initNew(id, title){
+  initNew(id, title) {
     this.id = id
     this.title = title
     this.tag("forum")
   }
 
-  static lookup(id){
-    if(!id) return null
+  static lookup(id) {
+    if (!id) return null
     return query.type(Forum).tag("forum").prop("id", id).first
   }
-  static all(){
+  static all() {
     return query.type(Forum).tag("forum").all
   }
 
+  static isOfType(entity) {
+    if (!entity) return false;
+    return entity.tags.includes("forum")
+  }
+
   get threads() {
-    return (this.rels.thread||[]).map(p => ForumThread.from(p))
+    return (this.rels.thread || []).map(p => ForumThread.from(p))
   }
 
-  static createId(name){
-    if(!name || typeof name !== "string") return null;
+  static createId(name) {
+    if (!name || typeof name !== "string") return null;
     return name.replace(/^\s+|\s+$/g, '') // trim
-               .toLowerCase()
-               .replace(/\//g, '-') //Replace / with -
-               .replace(/[^a-z0-9 -]/g, '') // remove invalid chars
-               .replace(/\s+/g, '-') // collapse whitespace and replace by -
-               .replace(/-+/g, '-'); // collapse dashes
+      .toLowerCase()
+      .replace(/\//g, '-') //Replace / with -
+      .replace(/[^a-z0-9 -]/g, '') // remove invalid chars
+      .replace(/\s+/g, '-') // collapse whitespace and replace by -
+      .replace(/-+/g, '-'); // collapse dashes
   }
 
-  toObj(){
+  toObj() {
     return {
       id: this.id,
       title: this.title

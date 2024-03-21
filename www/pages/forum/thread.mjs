@@ -1,9 +1,9 @@
 const elementName = 'forumthread-page'
 
 import api from "../../system/api.mjs"
-import {on, off, fire} from "../../system/events.mjs"
-import {state, setPageTitle, goto, stylesheets} from "../../system/core.mjs"
-import {getUser} from "../../system/user.mjs"
+import { on, off, fire } from "../../system/events.mjs"
+import { state, setPageTitle, goto, stylesheets } from "../../system/core.mjs"
+import { getUser } from "../../system/user.mjs"
 import "../../components/action-bar.mjs"
 import "../../components/action-bar-item.mjs"
 import "../../components/dropdown-menu.mjs"
@@ -88,6 +88,7 @@ template.innerHTML = `
   <action-bar class="hidden">
     <action-bar-item id="delete" title="Only possible for owner of thread and admins">Delete thread</action-bar-item>
     <action-bar-item id="move-thread-btn" title="Only possible for admins">Move thread</action-bar-item>
+    <action-bar-item id="history-btn" title="Only possible for admins">History</action-bar-item>
   </action-bar>
 
   <div id="container">
@@ -122,9 +123,9 @@ class Element extends HTMLElement {
     super();
 
     this.attachShadow({ mode: 'open' })
-        .adoptedStyleSheets = [stylesheets.global];
+      .adoptedStyleSheets = [stylesheets.global];
     this.shadowRoot.appendChild(template.content.cloneNode(true));
-    
+
     this.replyClicked = this.replyClicked.bind(this)
     this.postReply = this.postReply.bind(this)
     this.toggleReplyEditor = this.toggleReplyEditor.bind(this)
@@ -142,13 +143,14 @@ class Element extends HTMLElement {
     this.shadowRoot.getElementById("edit-title").addEventListener("click", this.titleEditClicked)
     this.shadowRoot.getElementById("subscribe").addEventListener("click", this.subscribeClicked);
     this.shadowRoot.getElementById("move-thread-btn").addEventListener("click", this.moveThread);
+    this.shadowRoot.getElementById("history-btn").addEventListener("click", () => goto(`/forum/thread/${this.threadId}/history`))
 
     this.threadId = this.getAttribute("threadid") || parseInt(/\d+/.exec(state().path)?.[0]);
-    
+
     setTimeout(() => {
       fire("forum-thread-page-created", {
         page: this,
-        container: this.shadowRoot.getElementById("container"), 
+        container: this.shadowRoot.getElementById("container"),
         threadId: this.threadId
       })
     }, 0)
@@ -163,12 +165,12 @@ class Element extends HTMLElement {
     off("changed-page", elementName)
   }
 
-  async refreshData(){
-    if(!this.threadId) return;
+  async refreshData() {
+    if (!this.threadId) return;
 
     let threadId = this.threadId;
 
-    let {forumThread: thread, forumClientSetup: setup} = await api.query(`{
+    let { forumThread: thread, forumClientSetup: setup } = await api.query(`{
       forumThread(id: ${threadId}){
         id, title, author{name, user{id}}, date, isSubscribed
         posts{id, author{name, user{id}}, date, edited, body, bodyHTML}
@@ -178,7 +180,7 @@ class Element extends HTMLElement {
       }
     }`)
 
-    if(!thread){
+    if (!thread) {
       alertDialog("Thread doesn't exist")
       return;
     }
@@ -190,10 +192,10 @@ class Element extends HTMLElement {
     this.thread = thread;
     this.setup = setup;
     this.shadowRoot.getElementById("posts").innerHTML = thread.posts.sort((a, b) => a.date < b.date ? -1 : 1)
-                                                                    .map(p => `
+      .map(p => `
                   <div class="post" data-postId="${p.id}">
                     <div class="postauthor"><field-ref ref="/forum/profile?name=${p.author.name}">${p.author.name}</field-ref></div>
-                    <div class="postdate" title="Originally posted: ${p.date.replaceAll("T", " ").substring(0, 19)}\nEdited: ${p.edited? p.edited.replaceAll("T", " ").substring(0, 19) : "<never>"}">
+                    <div class="postdate" title="Originally posted: ${p.date.replaceAll("T", " ").substring(0, 19)}\nEdited: ${p.edited ? p.edited.replaceAll("T", " ").substring(0, 19) : "<never>"}">
                       ${p.edited ? "(edited) " + p.edited.replaceAll("T", " ").substring(0, 19) : p.date.replaceAll("T", " ").substring(0, 19)}
                     </div>
                     <dropdown-menu-component class="postoptions" title="Options" width="300px">
@@ -205,7 +207,7 @@ class Element extends HTMLElement {
                         <button class="edit${(user.id == p.author.user?.id || user.permissions.includes("forum.admin")) && user.permissions.includes("forum.post.edit") ? "" : " hidden"}">Edit post</button>
                       </div>
                     </dropdown-menu-component>
-                    <div class="postbody${p.bodyHTML?" rendered":""}">${p.bodyHTML ? p.bodyHTML : p.body.trim().replace(/(\r\n|\n|\r)/gm, "<br/>")}</div>
+                    <div class="postbody${p.bodyHTML ? " rendered" : ""}">${p.bodyHTML ? p.bodyHTML : p.body.trim().replace(/(\r\n|\n|\r)/gm, "<br/>")}</div>
                   </div>`).join("")
 
     this.shadowRoot.getElementById("title").innerText = thread.title
@@ -242,36 +244,37 @@ class Element extends HTMLElement {
 
     this.shadowRoot.getElementById("delete").classList.toggle("hidden", (user.id != thread.author.user?.id && !user.permissions.includes("forum.admin")) || !user.permissions.includes("forum.thread.delete"))
     this.shadowRoot.getElementById("move-thread-btn").classList.toggle("hidden", !user.permissions.includes("forum.admin"))
+    this.shadowRoot.getElementById("history-btn").classList.toggle("hidden", !user.permissions.includes("forum.admin"))
     this.shadowRoot.getElementById("edit-title").classList.toggle("hidden", (user.id != thread.author.user?.id && !user.permissions.includes("forum.admin")) || !user.permissions.includes("forum.thread.edit"))
     this.shadowRoot.getElementById("reply").classList.toggle("hidden", !user.permissions.includes("forum.post.create"))
 
     //Hide actionbar if there aren't any buttons visible
     this.shadowRoot.querySelector("action-bar").classList.toggle("hidden", !!!this.shadowRoot.querySelector("action-bar action-bar-item:not(.hidden)"))
 
-    if(thread.posts.length < 1 && user.permissions.includes("forum.post.create")){
+    if (thread.posts.length < 1 && user.permissions.includes("forum.post.create")) {
       this.replyClicked()
     }
   }
 
-  replyClicked(){
-    if(!this.threadId) return;
+  replyClicked() {
+    if (!this.threadId) return;
     this.toggleReplyEditor(true)
     this.shadowRoot.getElementById("reply-editor")?.value("")
     this.shadowRoot.getElementById("reply-editor")?.focus()
   }
 
-  postReply(body){
-    if(!this.threadId) return;
+  postReply(body) {
+    if (!this.threadId) return;
     this.toggleReplyEditor(false)
-    if(body){
-      api.post(`forum/thread/${this.threadId}/posts`, {body}).then(this.refreshData)
+    if (body) {
+      api.post(`forum/thread/${this.threadId}/posts`, { body }).then(this.refreshData)
     }
   }
 
-  toggleReplyEditor(visible){
+  toggleReplyEditor(visible) {
     this.shadowRoot.getElementById("reply").classList.toggle("hidden", visible)
     let editor = this.shadowRoot.getElementById("reply-editor")
-    if(editor){
+    if (editor) {
       editor.classList.toggle("hidden", !visible)
     } else {
       // Don't load the editor, unless it is needed
@@ -279,29 +282,29 @@ class Element extends HTMLElement {
         this.shadowRoot.getElementById("reply-editor-container").innerHTML = `<richtext-component id="reply-editor" nosave submit></richtext-component>`
         editor = this.shadowRoot.getElementById("reply-editor")
         editor.addEventListener("close", () => this.toggleReplyEditor(false))
-        editor.addEventListener("submit", ({detail: {text}}) => this.postReply(text))
+        editor.addEventListener("submit", ({ detail: { text } }) => this.postReply(text))
         editor.focus()
       })
     }
   }
 
-  async deleteClicked(){
-    if(!this.threadId) return;
-    if(!(await confirmDialog("Are you sure that you want to delete this thread?"))) return;
+  async deleteClicked() {
+    if (!this.threadId) return;
+    if (!(await confirmDialog("Are you sure that you want to delete this thread?"))) return;
     await api.del(`forum/thread/${this.threadId}`)
     window.history.back();
   }
-  
-  async postsClicked(e){
-    if(e.target.tagName != "BUTTON") return;
+
+  async postsClicked(e) {
+    if (e.target.tagName != "BUTTON") return;
     let post = e.target.closest(".post")
     let id = post?.getAttribute("data-postId")
-    if(!id) return;
-    if(e.target.classList.contains("delete")){
-      if(!(await confirmDialog(`Are you sure that you want to delete this post?`))) return;
+    if (!id) return;
+    if (e.target.classList.contains("delete")) {
+      if (!(await confirmDialog(`Are you sure that you want to delete this post?`))) return;
       await api.del(`forum/post/${id}`)
       this.refreshData()
-    } else if(e.target.classList.contains("edit")){
+    } else if (e.target.classList.contains("edit")) {
       // Don't load the editor, unless it is needed
       import("../../components/richtext.mjs").then(() => {
         let container = this.shadowRoot.getElementById("posts")
@@ -311,13 +314,13 @@ class Element extends HTMLElement {
         div.innerHTML = `<richtext-component id="post-edit"></richtext-component>`
         let editor = div.firstChild
         editor.addEventListener("close", () => container.querySelectorAll(".post-edit").forEach(e => e.remove()))
-        editor.addEventListener("save", async ({detail: {text}}) => {
-          await api.patch(`forum/post/${id}`, {body: text})
+        editor.addEventListener("save", async ({ detail: { text } }) => {
+          await api.patch(`forum/post/${id}`, { body: text })
           this.refreshData()
         })
         editor.value(this.thread.posts.find(p => p.id == id).body)
         let nextPostE = post.nextElementSibling
-        if(nextPostE)
+        if (nextPostE)
           container.insertBefore(div, nextPostE)
         else
           container.appendChild(div)
@@ -325,15 +328,15 @@ class Element extends HTMLElement {
     }
   }
 
-  async titleEditClicked(){
-    if(!this.threadId) return;
-    let newTitle = await promptDialog("Enter new title", this.thread.title, {selectValue: true, title: "Edit thread title"});
-    if(!newTitle || newTitle == this.thread.title) return;
-    await api.patch(`forum/thread/${this.threadId}`, {title: newTitle})
+  async titleEditClicked() {
+    if (!this.threadId) return;
+    let newTitle = await promptDialog("Enter new title", this.thread.title, { selectValue: true, title: "Edit thread title" });
+    if (!newTitle || newTitle == this.thread.title) return;
+    await api.patch(`forum/thread/${this.threadId}`, { title: newTitle })
     this.refreshData()
   }
 
-  async addFile(){
+  async addFile() {
     return new Promise((resolve, reject) => {
       let dialog = this.shadowRoot.getElementById("add-file-dialog")
       let progress = dialog.querySelector("progress-bar")
@@ -343,11 +346,11 @@ class Element extends HTMLElement {
         ok: async (val) => {
           progress.classList.toggle("hidden", false)
           let formData = new FormData();
-          for(let file of dialog.querySelector("input[type=file]").files)
+          for (let file of dialog.querySelector("input[type=file]").files)
             formData.append("file", file);
-          let file = (await api.upload(`file/tag/forum-file/upload?acl=r:${val.accessAll?"permission:forum.read":"permission:forum.admin"};w:permission:forum.admin`, formData, {onProgress}))?.[0];
-          if(file){
-            await api.post(`forum/thread/${this.threadId}/files`, {fileId: file.id})
+          let file = (await api.upload(`file/tag/forum-file/upload?acl=r:${val.accessAll ? "permission:forum.read" : "permission:forum.admin"};w:permission:forum.admin`, formData, { onProgress }))?.[0];
+          if (file) {
+            await api.post(`forum/thread/${this.threadId}/files`, { fileId: file.id })
             return resolve()
           } else {
             alertDialog("Could not attach file. Try again.")
@@ -356,14 +359,16 @@ class Element extends HTMLElement {
         },
         validate: (val) => {
           let tooLargeFiles = Array.from(dialog.querySelector("input[type=file]").files).filter(f => f.size > this.setup.maxFileSizeMB * 1000000).map(f => f.name)
-          if(tooLargeFiles.length > 0){
+          if (tooLargeFiles.length > 0) {
             return `The following files exceed size limit of ${this.setup.maxFileSizeMB} MB: <br> - ${tooLargeFiles.join("<br> - ")}`
           }
           return true
-        },  
-        values: () => {return {
-          accessAll: dialog.querySelector("#file-access-all").checked,
-        }},
+        },
+        values: () => {
+          return {
+            accessAll: dialog.querySelector("#file-access-all").checked,
+          }
+        },
         close: () => {
           dialog.querySelectorAll("field-component input").forEach(e => e.value = '')
         }
@@ -371,29 +376,31 @@ class Element extends HTMLElement {
     })
   }
 
-  async subscribeClicked(){
+  async subscribeClicked() {
     let isSubscribed = this.shadowRoot.getElementById("subscribe").hasAttribute("subscribed")
 
     await api.post(`forum/thread/${this.threadId}/${isSubscribed ? "un" : ""}subscribe`)
-    let {forumThread: thread} = await api.query(`{forumThread(id: ${this.threadId}){isSubscribed}}`)
+    let { forumThread: thread } = await api.query(`{forumThread(id: ${this.threadId}){isSubscribed}}`)
 
     this.shadowRoot.getElementById("subscribe").innerText = thread.isSubscribed ? "Unsubscribe" : "Subscribe"
     this.shadowRoot.getElementById("subscribe").toggleAttribute("subscribed", thread.isSubscribed)
   }
 
-  moveThread(){
+  moveThread() {
     let dialog = this.shadowRoot.querySelector("#move-dialog")
 
     showDialog(dialog, {
       show: () => this.shadowRoot.getElementById("move-dest-id").focus(),
-      ok: async (val) => api.patch(`forum/thread/${this.threadId}`, {forumId: val.id}),
-      validate: async (val) => 
-          !val.id ? "Please fill out id"
-        : !(await api.get(`forum/forum/${val.id}/exists`)) ? "The forum doesn't exists"
-        : true,
-      values: () => {return {
-        id: this.shadowRoot.getElementById("move-dest-id").getValue()
-      }},
+      ok: async (val) => api.patch(`forum/thread/${this.threadId}`, { forumId: val.id }),
+      validate: async (val) =>
+        !val.id ? "Please fill out id"
+          : !(await api.get(`forum/forum/${val.id}/exists`)) ? "The forum doesn't exists"
+            : true,
+      values: () => {
+        return {
+          id: this.shadowRoot.getElementById("move-dest-id").getValue()
+        }
+      },
       close: () => {
         this.shadowRoot.querySelectorAll("field-component input").forEach(e => e.value = '')
       }
@@ -402,20 +409,20 @@ class Element extends HTMLElement {
 
   static get observedAttributes() {
     return ["threadid"];
-  }  
+  }
 
   attributeChangedCallback(name, oldValue, newValue) {
-    switch(name){
+    switch (name) {
       case "threadid":
-        if(newValue) {
+        if (newValue) {
           this.threadId = parseInt(newValue);
           this.refreshData();
-          this.dispatchEvent(new CustomEvent("changed-thread", {detail: {id: this.threadId, component: this}, bubbles: true, cancelable: false}));
+          this.dispatchEvent(new CustomEvent("changed-thread", { detail: { id: this.threadId, component: this }, bubbles: true, cancelable: false }));
         }
-      break;
+        break;
     }
   }
 }
 
 window.customElements.define(elementName, Element);
-export {Element, elementName as name}
+export { Element, elementName as name }

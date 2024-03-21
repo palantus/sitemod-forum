@@ -11,8 +11,9 @@ export default async () => {
   Role.lookupOrCreate("forum").addPermission(["forum.read", "forum.thread.create", "forum.post.create", "forum.post.edit", "forum.thread.edit", "forum.thread.attach-file"], true)
   Role.lookupOrCreate("forum-admin").addPermission(["forum.setup", "forum.admin", "forum.thread.delete", "forum.post.delete"], true)
 
-  DataType.lookupOrCreate("forum", {title: "Forum", permission: "forum.read", api: "forum/forum", nameField: "title", uiPath: "forum"})
-          .init({typeModel: Forum})
+  DataType.lookupOrCreate("forum", { title: "Forum", permission: "forum.read", api: "forum/forum", nameField: "title", uiPath: "forum" }).init({ typeModel: Forum })
+  DataType.lookupOrCreate("forumpost", { title: "Forum post", permission: "forum.read" }).init({ typeModel: ForumPost });
+  DataType.lookupOrCreate("forumthread", { title: "Forum thread", permission: "forum.read" }).init({ typeModel: ForumThread });
 
   Setup.lookup().ensureDefaults();
 
