@@ -58,6 +58,7 @@ export default class ForumThread extends Entity {
     this.rels.notification?.map(n => Notification.from(n)).forEach(n => n.dismiss())
     this.posts.forEach(p => p.delete())
     this.files.forEach(f => f.delete())
+    this.logEntries.forEach(l => l.delete())
     super.delete()
   }
 

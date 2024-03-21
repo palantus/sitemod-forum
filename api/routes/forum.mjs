@@ -57,6 +57,7 @@ export default (app) => {
     thread.rel(res.locals.user, "owner")
     thread.subscribe(res.locals.user)
     forum.rel(thread, "thread")
+    thread.log("Thread created", res.locals.user)
     res.json(thread.toObj())
   });
 
@@ -106,6 +107,7 @@ export default (app) => {
     post.updateHTML()
     thread.rel(post, "post")
     thread.subscribe(res.locals.user)
+    thread.log("New post", res.locals.user)
 
     let numReplies = thread.rels.post?.length || 0;
     if (numReplies == 1) {
@@ -157,6 +159,7 @@ export default (app) => {
     let file = File.lookup(req.params.fileId)
     if (!file || !file.hasAccess(res.locals.user, "w")) throw "Invalid file or you do not have access to it"
     if (thread.related.owner?.id != res.locals.user.id && !validateAccess(req, res, { permission: "forum.admin" })) throw "No access"
+    thread.log(`User ${res.locals.user.name} removed file ${file.name}`, res.locals.user)
     file.delete();
     res.json({ success: true })
   });
@@ -175,6 +178,7 @@ export default (app) => {
     if (!post) throw "Unknown post"
     if (post.related.owner?._id == res.locals.user._id && !validateAccess(req, res, { permission: "forum.post.delete" })) return;
     if (post.related.owner?._id != res.locals.user._id && !validateAccess(req, res, { permission: "forum.admin" })) return;
+    post.thread.log(`User ${res.locals.user.name} removed post`, res.locals.user)
     post.delete();
     res.json({ success: true })
   })
